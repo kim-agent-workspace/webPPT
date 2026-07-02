@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>iCare 医防融合协同平台系统汇报</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  :root{
+    --ink:#0a0a0b;
+    --ink-rgb:10,10,11;
+    --paper:#f1efea;
+    --paper-rgb:241,239,234;
+    --paper-tint:#e8e5de;
+    --ink-tint:#18181a;
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --serif-en:"Playfair Display","Source Serif 4",Georgia,serif;
+    --serif-body-en:"Source Serif 4",Georgia,serif;
+    --serif-zh:"Noto Serif SC",source-han-serif-sc,serif;
+    --sans-zh:"Noto Sans SC",source-han-sans-sc,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--ink);color:var(--paper);font-family:var(--sans-zh);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  canvas.bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block;transition:opacity 1.2s ease}
+  canvas#bg-light{opacity:0}
+  canvas#bg-dark{opacity:1}
+  body.light-bg canvas#bg-light{opacity:1}
+  body.light-bg canvas#bg-dark{opacity:0}
+  body.low-power canvas.bg{display:none!important}
+  #deck{position:fixed;inset:0;width:10000vw;height:100vh;display:flex;flex-wrap:nowrap;transition:none;z-index:10;will-change:transform}
+  .slide{width:100vw;height:100vh;flex:0 0 100vw;position:relative;padding:6vh 6vw 10vh 6vw;display:flex;flex-direction:column;overflow:hidden}
+  .slide.light{color:var(--ink);background:var(--paper)}
+  .slide.dark{color:var(--paper);background:var(--ink)}
+  .slide::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;transition:background .7s ease}
+  .slide.light::before{background:rgba(var(--paper-rgb),.78);backdrop-filter:blur(3px)}
+  .slide.dark::before{background:rgba(var(--ink-rgb),.78);backdrop-filter:blur(3px)}
+  .slide.hero.light::before{background:rgba(var(--paper-rgb),.16);backdrop-filter:none}
+  .slide.hero.dark::before{background:rgba(var(--ink-rgb),.12);backdrop-filter:none}
+  .slide.hero::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+  .slide.hero.light::after{background:linear-gradient(180deg,rgba(var(--paper-rgb),.28) 0%,rgba(var(--paper-rgb),0) 14%,rgba(var(--paper-rgb),0) 86%,rgba(var(--paper-rgb),.28) 100%)}
+  .slide.hero.dark::after{background:linear-gradient(180deg,rgba(var(--ink-rgb),.32) 0%,rgba(var(--ink-rgb),0) 14%,rgba(var(--ink-rgb),0) 86%,rgba(var(--ink-rgb),.32) 100%)}
+  .chrome{display:flex;justify-content:space-between;align-items:flex-start;font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.7}
+  .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.55}
+  .foot .title{font-family:var(--serif-zh);font-weight:400;letter-spacing:.05em;text-transform:none;opacity:.75;font-size:13px}
+  .tag{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;padding:6px 14px;border:1px solid currentColor;opacity:.85}
+  .rule{width:100%;height:1px;background:currentColor;opacity:.25;margin:3vh 0}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.3em;text-transform:uppercase;opacity:.6;margin-bottom:2.6vh}
+  .display{font-family:var(--serif-en);font-weight:700;font-size:11vw;line-height:.92;letter-spacing:-.025em}
+  .display-zh{font-family:var(--serif-zh);font-weight:700;font-size:7.8vw;line-height:1.04;letter-spacing:-.005em}
+  .h1-zh{font-family:var(--serif-zh);font-weight:700;font-size:4.6vw;line-height:1.12;letter-spacing:-.005em}
+  .h2-zh{font-family:var(--serif-zh);font-weight:600;font-size:3.2vw;line-height:1.2;letter-spacing:0}
+  .h3-zh{font-family:var(--serif-zh);font-weight:500;font-size:1.9vw;line-height:1.35}
+  .body-zh{font-family:var(--sans-zh);font-weight:400;font-size:max(15px,1.22vw);line-height:1.75;opacity:.82;letter-spacing:.01em}
+  .body-serif{font-family:var(--serif-zh);font-weight:400;font-size:max(15px,1.3vw);line-height:1.65;opacity:.88}
+  .lead{font-family:var(--serif-zh);font-weight:400;font-size:1.9vw;line-height:1.4;opacity:.85}
+  .meta{font-family:var(--mono);font-size:max(11px,.88vw);letter-spacing:.16em;text-transform:uppercase;opacity:.6}
+  .big-num{font-family:var(--serif-en);font-weight:800;font-size:10vw;line-height:.85;letter-spacing:-.03em;font-feature-settings:"tnum"}
+  .mid-num{font-family:var(--serif-en);font-weight:700;font-size:5.5vw;line-height:.88;letter-spacing:-.02em;font-feature-settings:"tnum"}
+  em{font-style:italic;font-family:var(--serif-en)}
+  .en{font-family:var(--serif-en);font-style:italic;font-weight:500}
+  .col{display:flex;flex-direction:column;gap:2.4vh}
+  .row{display:flex;align-items:center;gap:3vw}
+  .grid-6{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:4vw 6vw;flex:1;align-content:center;padding:2vh 0}
+  .grid-4{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);gap:4vh 6vw;flex:1;align-content:center}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:4vw;flex:1;align-content:center}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:4vw;flex:1;align-items:center}
+  .fill{flex:1}
+  .center{align-items:center;justify-content:center;text-align:center}
+  .callout{padding:3vh 2.4vw;border-left:3px solid currentColor;position:relative;font-family:var(--serif-zh);font-size:max(15px,1.2vw);line-height:1.55;opacity:.92}
+  .slide.light .callout{background:rgba(var(--ink-rgb),.05)}
+  .slide.dark .callout{background:rgba(var(--paper-rgb),.06)}
+  .callout .cite{display:block;margin-top:1.6vh;font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.6}
+  .callout .q-big{font-family:var(--serif-zh);font-weight:600;font-size:max(17px,1.6vw);line-height:1.42}
+  .rowline{display:grid;grid-template-columns:1fr 2fr 1fr;gap:2vw;padding:2.2vh 0;border-top:1px solid currentColor;align-items:center;border-color:rgba(127,127,127,.25)}
+  .rowline:last-child{border-bottom:1px solid currentColor;border-color:rgba(127,127,127,.25)}
+  .rowline .k{font-family:var(--serif-zh);font-weight:700;font-size:1.7vw}
+  .rowline .v{font-family:var(--sans-zh);font-weight:400;font-size:max(14px,1.2vw);opacity:.85;line-height:1.55}
+  .rowline .m{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.6;justify-self:end}
+  .hi{position:relative;display:inline}
+  .slide.dark .hi::after{content:"";position:absolute;left:-.1em;right:-.1em;bottom:-.05em;height:.28em;background:rgba(var(--paper-rgb),.15);z-index:-1}
+  .slide.light .hi::after{content:"";position:absolute;left:-.1em;right:-.1em;bottom:-.05em;height:.28em;background:rgba(var(--ink-rgb),.08);z-index:-1}
+  .frame-img{overflow:hidden;position:relative;background:rgba(0,0,0,.04);box-sizing:border-box;width:100%;border-radius:4px}
+  .slide.dark .frame-img{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12)}
+  .frame-img > img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+  .frame-img.fit-contain > img{object-fit:contain;object-position:center center}
+  .frame-img.r-16x9{aspect-ratio:16/9;max-height:64vh}
+  figure.frame-img{margin:0;display:flex;flex-direction:column;min-width:0}
+  .img-cap{display:block;margin-top:.8vh;font-family:var(--mono);font-size:max(10px,.8vw);letter-spacing:.22em;text-transform:uppercase;opacity:.6}
+  #nav{position:fixed;left:50%;bottom:2.6vh;transform:translateX(-50%);z-index:30;display:flex;gap:10px;padding:8px 14px;border-radius:999px;background:rgba(0,0,0,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  #nav .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all .3s ease;border:0;padding:0}
+  #nav .dot:hover{background:rgba(255,255,255,.5);transform:scale(1.15)}
+  #nav .dot.active{background:rgba(255,255,255,.95);width:22px;border-radius:999px}
+  body.light-bg #nav{background:rgba(255,255,255,.25)}
+  body.light-bg #nav .dot{background:rgba(var(--ink-rgb),.25)}
+  body.light-bg #nav .dot.active{background:rgba(var(--ink-rgb),.9)}
+  #hint{position:fixed;bottom:3vh;right:3vw;z-index:30;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.4;mix-blend-mode:difference;color:#aaa}
+  body.low-power #hint{opacity:.72;color:var(--paper);mix-blend-mode:normal}
+  body.light-bg.low-power #hint{color:var(--ink)}
+
+  .frame{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+  .frame.grid-2-7-5,.frame.grid-2-6-6,.frame.grid-2-8-4,.frame.grid-3-3,.frame.grid-6{display:grid}
+  .h-hero{font-family:var(--serif-zh);font-weight:900;font-size:10vw;line-height:.96;letter-spacing:-.02em}
+  .h-xl{font-family:var(--serif-zh);font-weight:700;font-size:6.2vw;line-height:1.08;letter-spacing:-.01em}
+  .h-sub{font-family:var(--serif-zh);font-weight:500;font-size:3.1vw;line-height:1.25;letter-spacing:0;opacity:.7}
+  .h-md{font-family:var(--serif-zh);font-weight:600;font-size:2.3vw;line-height:1.3}
+  .lead{font-family:var(--serif-zh);font-weight:400;font-size:1.75vw;line-height:1.5;opacity:.86}
+  .meta-row{display:flex;gap:1.2em;align-items:baseline;flex-wrap:wrap;font-family:var(--mono);font-size:max(12px,.92vw);letter-spacing:.16em;text-transform:uppercase;opacity:.6}
+  .stat-card{display:flex;flex-direction:column;gap:.8vh;align-items:flex-start;padding-top:1.6vh;border-top:1px solid currentColor;border-color:rgba(127,127,127,.3)}
+  .stat-card .stat-label{font-family:var(--mono);font-size:max(10px,.78vw);letter-spacing:.24em;text-transform:uppercase;opacity:.55}
+  .stat-card .stat-nb{font-family:var(--serif-en);font-weight:800;font-size:5.8vw;line-height:.9;letter-spacing:-.03em;font-feature-settings:"tnum";margin-top:.4vh}
+  .stat-card .stat-nb .stat-unit{font-family:var(--serif-zh);font-weight:500;font-size:.38em;letter-spacing:0;opacity:.72;margin-left:.14em}
+  .stat-card .stat-note{font-family:var(--sans-zh);font-weight:400;font-size:max(13px,1.05vw);line-height:1.5;opacity:.72;margin-top:.6vh}
+  .pipeline-section{margin-top:4.4vh;padding-top:2.8vh;border-top:1px dashed rgba(127,127,127,.32)}
+  .pipeline-section:first-of-type{border-top:0;padding-top:0;margin-top:3vh}
+  .pipeline-label{font-family:var(--mono);font-size:max(11px,.85vw);letter-spacing:.24em;text-transform:uppercase;opacity:.62;margin-bottom:2.2vh}
+  .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:1.2vw}
+  .pipeline[data-cols="3"]{grid-template-columns:repeat(3,1fr)}
+  .pipeline[data-cols="4"]{grid-template-columns:repeat(4,1fr)}
+  .pipeline[data-cols="5"]{grid-template-columns:repeat(5,1fr)}
+  .step{display:flex;flex-direction:column;gap:.8vh;padding-top:1.4vh;border-top:1px solid currentColor;border-color:rgba(127,127,127,.35)}
+  .step-nb{font-family:var(--serif-en);font-style:italic;font-weight:500;font-size:1.15vw;opacity:.45}
+  .step-title{font-family:var(--sans-zh);font-weight:700;font-size:1.55vw;letter-spacing:.01em;line-height:1.2}
+  .step-desc{font-family:var(--sans-zh);font-weight:400;font-size:max(12px,.95vw);line-height:1.45;opacity:.72}
+  .grid-2-7-5{display:grid;grid-template-columns:7fr 5fr;gap:3vw 4vh;align-items:start}
+  .grid-2-6-6{display:grid;grid-template-columns:1fr 1fr;gap:3vw 4vh;align-items:start}
+  .grid-2-8-4{display:grid;grid-template-columns:8fr 4fr;gap:3vw 4vh;align-items:start}
+  .grid-3-3{display:grid;grid-template-columns:repeat(3,1fr);grid-auto-rows:minmax(0,1fr);gap:2.4vh 2vw}
+
+  /* 自定义辅助类 */
+  .tech-card{border:1px solid currentColor;border-color:rgba(127,127,127,.22);padding:2vh 1.6vw;display:flex;flex-direction:column;gap:.8vh}
+  .tech-card .tech-name{font-family:var(--serif-zh);font-weight:700;font-size:1.5vw}
+  .tech-card .tech-desc{font-family:var(--sans-zh);font-size:max(12px,.95vw);opacity:.72;line-height:1.5}
+  .slide.light .tech-card{background:rgba(var(--ink-rgb),.03)}
+  .slide.dark .tech-card{background:rgba(var(--paper-rgb),.04)}
+  .num-card{display:flex;gap:1.6vw;align-items:flex-start;padding:2vh 0}
+  .num-card .num{font-family:var(--serif-en);font-weight:800;font-size:3.2vw;line-height:.9;font-feature-settings:"tnum";opacity:.7;min-width:3.5vw}
+  .num-card .num-body{display:flex;flex-direction:column;gap:.6vh}
+  .num-card .num-title{font-family:var(--serif-zh);font-weight:600;font-size:1.5vw;line-height:1.3}
+  .num-card .num-desc{font-family:var(--sans-zh);font-size:max(12px,.95vw);opacity:.72;line-height:1.5}
+  .formula-block{padding:2.4vh 2.5vw;margin:2vh 0;text-align:center;overflow-x:auto}
+  .formula-block .katex{font-size:max(20px,1.65vw)}
+  .slide.light .formula-block{background:rgba(var(--ink-rgb),.04);border-left:3px solid rgba(var(--ink-rgb),.25);color:var(--ink)}
+  .slide.dark .formula-block{background:rgba(var(--paper-rgb),.05);border-left:3px solid rgba(var(--paper-rgb),.2);color:var(--paper)}
+  .compare-table{display:grid;grid-template-columns:1fr 1fr;gap:3vw;margin-top:3vh}
+  .ct-col{padding:2.4vh 2vw;border:1px solid currentColor;border-color:rgba(127,127,127,.25)}
+  .ct-label{font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;opacity:.6;margin-bottom:2vh}
+  .ct-title{font-family:var(--serif-zh);font-weight:600;font-size:1.6vw;margin-bottom:2vh}
+  .three-col{display:grid;grid-template-columns:repeat(3,1fr);gap:2.4vw;flex:1;align-content:start}
+  .col-card{border-top:2px solid currentColor;padding-top:2vh}
+  .col-num{font-family:var(--serif-en);font-style:italic;font-weight:500;font-size:1.4vw;opacity:.45}
+  .col-title{font-family:var(--serif-zh);font-weight:700;font-size:1.7vw;line-height:1.2;margin:1.2vh 0}
+  .col-body{font-family:var(--sans-zh);font-size:max(12px,.95vw);opacity:.76;line-height:1.55}
+
+  @media (max-width:900px){
+    .display{font-size:16vw}.display-zh{font-size:12vw}.h1-zh{font-size:7vw}
+    .h-hero{font-size:14vw}.h-xl{font-size:9vw}
+    .pipeline{grid-template-columns:repeat(2,1fr)}
+    .grid-2-7-5,.grid-2-6-6,.grid-2-8-4{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<script>
+  (function(){
+    const KEY='guizang-ppt-low-power';
+    const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const stored=localStorage.getItem(KEY);
+    window.__lowPowerMode=stored==='1'||(stored===null&&reduced);
+    function updateHint(){
+      const hint=document.getElementById('hint');
+      if(hint) hint.textContent='← → 翻页 · B '+(window.__lowPowerMode?'动态':'静态')+' · ESC 索引';
+    }
+    window.__setLowPowerMode=function(on,opts={}){
+      window.__lowPowerMode=!!on;
+      document.body.classList.toggle('low-power',window.__lowPowerMode);
+      if(opts.persist!==false) localStorage.setItem(KEY,window.__lowPowerMode?'1':'0');
+      if(window.__lowPowerMode&&document.getAnimations) document.getAnimations().forEach(a=>a.cancel());
+      updateHint();
+      dispatchEvent(new CustomEvent('ppt-low-power-change',{detail:{on:window.__lowPowerMode}}));
+      if(window.__playSlide) window.__playSlide(window.__currentSlideIndex||0);
+    };
+    document.body.classList.toggle('low-power',window.__lowPowerMode);
+    addEventListener('DOMContentLoaded',updateHint,{once:true});
+  })();
+</script>
+<canvas id="bg-dark" class="bg"></canvas>
+<canvas id="bg-light" class="bg"></canvas>
+<div id="hint">← → 翻页 · B 静态 · ESC 索引</div>
+<div id="deck">
+<!-- ============ SLIDES START ============ -->
+
+<!-- 01 · 封面 -->
+<section class="slide hero dark">
+  <div class="chrome"><div>技术汇报 · 2026</div><div>iCare</div></div>
+  <div class="frame" style="display:grid; gap:4vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>系统方案汇报</div>
+    <h1 class="h-hero" data-anim>iCare</h1>
+    <h2 class="h-sub" data-anim>医防融合协同平台</h2>
+    <p class="lead" style="max-width:58vw" data-anim>慢病全周期管理、RPA 数据互通与 AI 风险预测</p>
+    <div class="meta-row" data-anim><span>基层医疗</span><span>·</span><span>慢病管理</span><span>·</span><span>AI 辅助决策</span></div>
+  </div>
+  <div class="foot"><div>iCare 医防融合协同平台 · 系统方案汇报</div><div>— 2026 —</div></div>
+</section>
+
+<!-- 02 · 目录 -->
+<section class="slide dark">
+  <div class="chrome"><div>Contents · 目录</div><div>02 / 25</div></div>
+  <div class="frame" style="padding-top:6vh">
+    <div class="kicker" data-anim>报告导览</div>
+    <h2 class="h-xl" data-anim>目录</h2>
+    <div class="rule" style="margin-top:3vh" data-anim></div>
+    <div style="display:flex; flex-direction:column; gap:2.2vh; margin-top:3vh">
+      <div class="rowline" data-anim><div class="k" style="font-family:var(--serif-en); font-style:italic">一</div><div class="v">慢病系统概述</div><div class="m">Overview</div></div>
+      <div class="rowline" data-anim><div class="k" style="font-family:var(--serif-en); font-style:italic">二</div><div class="v">全周期数据排列与存储</div><div class="m">Data Architecture</div></div>
+      <div class="rowline" data-anim><div class="k" style="font-family:var(--serif-en); font-style:italic">三</div><div class="v">RPA 与社服等多源 HIS 系统的连接</div><div class="m">Automation</div></div>
+      <div class="rowline" data-anim><div class="k" style="font-family:var(--serif-en); font-style:italic">四</div><div class="v">慢病处方</div><div class="m">Prescription</div></div>
+      <div class="rowline" data-anim><div class="k" style="font-family:var(--serif-en); font-style:italic">五</div><div class="v">预测算法</div><div class="m">Algorithm</div></div>
+      <div class="rowline" data-anim><div class="k" style="font-family:var(--serif-en); font-style:italic">六</div><div class="v">医保费用预测、资源调配与智能门诊随访</div><div class="m">Applications</div></div>
+    </div>
+  </div>
+  <div class="foot"><div>目录 · Contents</div><div>— · —</div></div>
+</section>
+
+<!-- 03 · 系统总览（Mermaid 框架图） -->
+<section class="slide light">
+  <div class="chrome"><div>系统总览 · Architecture</div><div>03 / 25</div></div>
+  <div class="frame" style="padding-top:2vh; overflow:visible">
+    <div style="display:grid; grid-template-columns:38fr 62fr; gap:3.5vw; align-items:start">
+      <!-- 左侧：kicker + 标题 + 三条说明 -->
+      <div style="display:flex; flex-direction:column; gap:1.8vh">
+        <div class="kicker" data-anim>Architecture Overview</div>
+        <h2 class="h-xl" data-anim style="font-size:4.4vw; margin-bottom:.8vh; line-height:1.15">系统总体框架</h2>
+        <div data-anim style="padding:1.6vh 1.2vw; border-left:3px solid currentColor; background:rgba(var(--ink-rgb),.03)">
+          <div style="font-family:var(--serif-zh); font-weight:700; font-size:max(13px,1.1vw); margin-bottom:.6vh; letter-spacing:.01em">客户端与前端</div>
+          <div style="font-family:var(--sans-zh); font-size:max(12px,.85vw); line-height:1.55; opacity:.78">系统以 Web 浏览器与 Electron 桌面端作为双入口，前端基于 Vue 3 构建慢病管理工作台，并结合 Vue Router 与 Pinia 实现页面路由与状态管理。</div>
+        </div>
+        <div data-anim style="padding:1.6vh 1.2vw; border-left:3px solid currentColor; background:rgba(var(--ink-rgb),.03)">
+          <div style="font-family:var(--serif-zh); font-weight:700; font-size:max(13px,1.1vw); margin-bottom:.6vh; letter-spacing:.01em">服务层与数据层</div>
+          <div style="font-family:var(--sans-zh); font-size:max(12px,.85vw); line-height:1.55; opacity:.78">后端采用 ThinkPHP 8.1 多应用架构，配合 Kafka 数据平台接入多源异构数据；业务数据存储于 MySQL，卫健相关数据与算法支撑数据存储于 PostgreSQL，共同形成慢病全周期数据基础。</div>
+        </div>
+        <div data-anim style="padding:1.6vh 1.2vw; border-left:3px solid currentColor; background:rgba(var(--ink-rgb),.03)">
+          <div style="font-family:var(--serif-zh); font-weight:700; font-size:max(13px,1.1vw); margin-bottom:.6vh; letter-spacing:.01em">RPA 与 AI 预测</div>
+          <div style="font-family:var(--sans-zh); font-size:max(12px,.85vw); line-height:1.55; opacity:.78">针对社服系统等封闭外部系统，平台通过 Playwright 自动化补足数据抓取与回填能力；在此基础上，结合事件—特征变化驱动分桶与离散时间生存模型，实现慢病风险预测与辅助决策。</div>
+        </div>
+      </div>
+      <!-- 右侧：框架图，顶部与左侧 kicker 对齐 -->
+      <div data-anim style="background:rgba(var(--ink-rgb),.025); border:1px solid rgba(127,127,127,.15); border-radius:4px; display:flex; align-items:flex-start; justify-content:center; padding:2vh 1.2vw; max-height:78vh; overflow:hidden">
+        <img src="mermaid-diagram.png" alt="iCare 系统架构图" style="max-width:100%; max-height:76vh; object-fit:contain; object-position:top center">
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>图：iCare 系统总体框架 · 客户端 → 前端 → 后端 → RPA → 外部系统 → 数据层 → AI 预测层</div><div>System Architecture</div></div>
+</section>
+
+<!-- 04 · 一、慢病系统概述 -->
+<section class="slide hero dark">
+  <div class="chrome"><div>第一章 · 系统概述</div><div>04 / 25</div></div>
+  <div class="frame" style="display:grid; gap:5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Chapter I</div>
+    <h1 class="h-hero" style="font-size:7.5vw" data-anim>慢病系统概述</h1>
+    <p class="lead" style="max-width:62vw" data-anim>iCare 医防融合协同平台面向基层医疗机构，支持高血压、糖尿病患者的建档、随访、评估、干预、转诊与数据同步等全流程管理，并集成 HIS、LIS、公卫系统等多源医疗数据，提供 AI 辅助诊断与风险预测能力。</p>
+    <div style="display:flex; gap:3vw; margin-top:2vh" data-anim>
+      <span class="tag">医防融合</span><span class="tag">慢病全周期管理</span><span class="tag">多源医疗数据接入</span><span class="tag">AI 辅助决策</span>
+    </div>
+  </div>
+  <div class="foot"><div>第一章 · 慢病系统概述</div><div>— · —</div></div>
+</section>
+
+<!-- 05 · 1.1 技术栈 -->
+<section class="slide light">
+  <div class="chrome"><div>技术架构 · Tech Stack</div><div>05 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 1.1</div>
+    <h2 class="h-xl" data-anim>技术栈</h2>
+    <p class="lead" style="margin-bottom:3vh" data-anim>前后端分离、多应用后端、桌面端本地化、双数据库支撑业务与算法。</p>
+    <div class="grid-3-3" style="margin-top:2vh">
+      <div class="tech-card" data-anim><div class="tech-name">ThinkPHP 8.1</div><div class="tech-desc">多应用模式后端框架，承载业务管理、接口服务与公共能力封装</div></div>
+      <div class="tech-card" data-anim><div class="tech-name">Vue 3.3 + Vite 5</div><div class="tech-desc">前端框架，构建慢病管理工作台，JS + Vite 实现极速开发体验</div></div>
+      <div class="tech-card" data-anim><div class="tech-name">Element Plus 2.7</div><div class="tech-desc">UI 组件库，提供统一的医疗管理系统界面组件</div></div>
+      <div class="tech-card" data-anim><div class="tech-name">Pinia</div><div class="tech-desc">Vue 3 状态管理，管理患者数据、随访状态等全局状态</div></div>
+      <div class="tech-card" data-anim><div class="tech-name">MySQL + PostgreSQL</div><div class="tech-desc">MySQL 主业务库 + PostgreSQL 卫健系统对接与算法数据库，双库协同</div></div>
+      <div class="tech-card" data-anim><div class="tech-name">Electron</div><div class="tech-desc">桌面端架构，通过 IPC 通信实现本地化能力与 RPA 任务调度</div></div>
+    </div>
+  </div>
+  <div class="foot"><div>1.1 技术栈 · ThinkPHP + Vue 3 + Electron + 双数据库</div><div>Tech Stack</div></div>
+</section>
+
+<!-- 06 · 1.2 框架图说明 -->
+<section class="slide dark">
+  <div class="chrome"><div>框架说明 · Architecture Flow</div><div>06 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 1.2</div>
+    <h2 class="h-xl" data-anim style="font-size:5vw">框架图说明</h2>
+    <p class="lead" style="margin-bottom:3vh" data-anim>三条逻辑主线：数据流 + 业务流 + 自动化流。</p>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:2.4vw; margin-top:2vh">
+      <div data-anim style="padding:2.4vh 1.8vw; border-top:2px solid currentColor">
+        <div style="font-family:var(--mono); font-size:10px; letter-spacing:.28em; text-transform:uppercase; opacity:.5; margin-bottom:1.6vh">Flow 01 · 数据流</div>
+        <div style="font-family:var(--serif-zh); font-weight:600; font-size:1.5vw; margin-bottom:1.4vh">多源接入 → 统一存储</div>
+        <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.55">社服系统、HIS、LIS、公卫系统等多源异构数据通过 Kafka 数据平台接入，经解析、清洗、字段映射、身份匹配、时间戳统一和质量校验后，写入 MySQL 主业务库，与 PostgreSQL 共同形成慢病全周期数据基础。</div>
+      </div>
+      <div data-anim style="padding:2.4vh 1.8vw; border-top:2px solid currentColor">
+        <div style="font-family:var(--mono); font-size:10px; letter-spacing:.28em; text-transform:uppercase; opacity:.5; margin-bottom:1.6vh">Flow 02 · 业务流</div>
+        <div style="font-family:var(--serif-zh); font-weight:600; font-size:1.5vw; margin-bottom:1.4vh">Web + 桌面端双入口</div>
+        <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.55">前端基于 Vue 3 构建慢病管理工作台，后端 ThinkPHP 8.1 通过 Controller 完成业务管理、接口服务和公共能力封装，桌面端通过 Electron + IPC 通信提供本地化能力。</div>
+      </div>
+      <div data-anim style="padding:2.4vh 1.8vw; border-top:2px solid currentColor">
+        <div style="font-family:var(--mono); font-size:10px; letter-spacing:.28em; text-transform:uppercase; opacity:.5; margin-bottom:1.6vh">Flow 03 · 自动化流</div>
+        <div style="font-family:var(--serif-zh); font-weight:600; font-size:1.5vw; margin-bottom:1.4vh">RPA 补足 + AI 预测</div>
+        <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.55">通过 RPA 自动化层模拟人工操作，解决社服系统等封闭系统的数据互通问题。AI 预测层基于患者全周期数据，采用事件-特征变化驱动分桶法和离散时间生存模型，预测疾病进展、并发症、转诊等多种结局风险。</div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:3vh" data-anim>核心判断：数据结构决定慢病 AI 模型是否可训练、可解释、可追溯。</div>
+  </div>
+  <div class="foot"><div>1.2 框架图说明 · 数据流 + 业务流 + 自动化流</div><div>Architecture Flow</div></div>
+</section>
+
+<!-- 07 · 二、全周期数据排列与存储 -->
+<section class="slide hero dark">
+  <div class="chrome"><div>第二章 · 数据架构</div><div>07 / 25</div></div>
+  <div class="frame" style="display:grid; gap:6vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Chapter II</div>
+    <h1 class="h-hero" style="font-size:6.8vw" data-anim>全周期数据排列与存储</h1>
+    <div class="callout" style="max-width:62vw; font-size:max(16px,1.4vw)" data-anim>"数据结构决定慢病 AI 模型是否可训练、可解释、可追溯。"</div>
+  </div>
+  <div class="foot"><div>第二章 · 全周期数据排列与存储</div><div>— · —</div></div>
+</section>
+
+<!-- 08 · 2.1 建设目标 -->
+<section class="slide light">
+  <div class="chrome"><div>数据建设 · Goals</div><div>08 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 2.1</div>
+    <h2 class="h-xl" data-anim>建设目标</h2>
+    <div class="grid-2-6-6" style="margin-top:4vh">
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">现实挑战</h3>
+        <ul style="display:flex; flex-direction:column; gap:1.4vh; font-family:var(--sans-zh); font-size:max(14px,1.1vw); line-height:1.6; opacity:.82; padding-left:1.2em">
+          <li>跨机构慢病管理数据来源复杂、结构不统一</li>
+          <li>各机构接口不完善，数据标准化程度低</li>
+          <li>长期随访数据管理缺乏统一规范</li>
+          <li>疾病进展与终点事件难以清晰界定</li>
+          <li>模型训练样本构建缺乏系统性数据基础</li>
+        </ul>
+      </div>
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">建设目标</h3>
+        <ul style="display:flex; flex-direction:column; gap:1.4vh; font-family:var(--sans-zh); font-size:max(14px,1.1vw); line-height:1.6; opacity:.82; padding-left:1.2em">
+          <li>支持人工智能动态预测与风险预警</li>
+          <li>支撑临床决策支持系统</li>
+          <li>保障多源数据持续接入与统一管理</li>
+          <li>实现长期随访数据的规范化存储</li>
+          <li>为模型训练提供高质量结构化样本</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>2.1 建设目标 · 面向 AI 预测与临床决策的数据基础建设</div><div>Data Goals</div></div>
+</section>
+
+<!-- 09 · 2.2 整体架构 -->
+<section class="slide dark">
+  <div class="chrome"><div>数据架构 · Pipeline</div><div>09 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 2.2</div>
+    <h2 class="h-xl" data-anim>整体架构：数据接入与处理流程</h2>
+    <div class="pipeline-section" style="margin-top:4vh">
+      <div class="pipeline-label" data-anim>Data Pipeline · 数据处理管道</div>
+      <div class="pipeline" data-cols="5">
+        <div class="step" data-anim><div class="step-nb">01</div><div class="step-title">数据源接入</div><div class="step-desc">社服系统、HIS、LIS、随访、检验检查、用药等多源异构数据接入</div></div>
+        <div class="step" data-anim><div class="step-nb">02</div><div class="step-title">Kafka 通道</div><div class="step-desc">统一消息管道，接收并缓冲多源数据流</div></div>
+        <div class="step" data-anim><div class="step-nb">03</div><div class="step-title">清洗与标准化</div><div class="step-desc">解析、字段映射、患者身份匹配、时间戳统一、质量校验</div></div>
+        <div class="step" data-anim><div class="step-nb">04</div><div class="step-title">数据入库</div><div class="step-desc">MySQL 主业务库 + PostgreSQL 卫健/算法库，统一患者标识和时间戳</div></div>
+        <div class="step" data-anim><div class="step-nb">05</div><div class="step-title">智能应用</div><div class="step-desc">随访管理、风险预测、预警干预、临床决策支持</div></div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:3vh" data-anim>通过统一患者标识和时间戳，形成连续、可追溯的慢病全周期数据链条，为随访管理、风险预测、预警干预和临床决策支持提供数据基础。</div>
+  </div>
+  <div class="foot"><div>2.2 整体架构 · 数据源接入 → Kafka → 清洗标准化 → 入库 → 智能应用</div><div>Data Pipeline</div></div>
+</section>
+
+<!-- 10 · 2.3 三表式数据库设计 -->
+<section class="slide light">
+  <div class="chrome"><div>数据库设计 · Core Schema</div><div>10 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 2.3</div>
+    <h2 class="h-xl" data-anim style="font-size:5.2vw">三表式数据库设计</h2>
+    <p class="lead" style="margin-bottom:3vh" data-anim>围绕患者慢病全周期管理，设置三类核心实体表，形成完整、连续、可追溯的数据链条。</p>
+    <div class="three-col" style="margin-top:2vh">
+      <div class="col-card" data-anim>
+        <div class="col-num">Table 01</div>
+        <div class="col-title">患者主索引表</div>
+        <div class="col-body">
+          <p style="margin-bottom:1.2vh"><strong>作用：</strong>全库患者身份识别与跨机构数据关联的基础，实现同一患者在不同机构、不同系统、不同时间段内数据的统一归集。</p>
+          <p style="margin-bottom:1.2vh"><strong>核心字段：</strong>患者唯一标识、基本人口学信息、疾病类型、所属医疗机构、转入转出转诊记录。</p>
+          <p><strong>模型意义：</strong>为模型训练提供唯一患者身份锚点，确保跨源数据可关联。</p>
+        </div>
+      </div>
+      <div class="col-card" data-anim>
+        <div class="col-num">Table 02</div>
+        <div class="col-title">随访队列表</div>
+        <div class="col-body">
+          <p style="margin-bottom:1.2vh"><strong>作用：</strong>记录随访期间仍持续产生管理记录的患者，以及结局尚未明确、仍处于随访或待核实状态的患者。</p>
+          <p style="margin-bottom:1.2vh"><strong>核心字段：</strong>队列状态、随访开始时间、最近有效随访时间、检查评估时间、持续管理标志、待核实标志。</p>
+          <p><strong>模型意义：</strong>动态管理随访窗口，明确适用于风险预测和预警算法的人群范围。</p>
+        </div>
+      </div>
+      <div class="col-card" data-anim>
+        <div class="col-num">Table 03</div>
+        <div class="col-title">终点事件队列表</div>
+        <div class="col-body">
+          <p style="margin-bottom:1.2vh"><strong>作用：</strong>记录已明确发生终点事件的患者，定义死亡、严重并发症、急性加重、住院、靶器官损害、疾病进展、转诊、失访、迁出等结局。</p>
+          <p style="margin-bottom:1.2vh"><strong>核心字段：</strong>终点事件类型、发生时间、确认来源、事件说明、相关证据。</p>
+          <p><strong>模型意义：</strong>为模型训练提供清晰、可追溯的标签定义，明确患者结局状态。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>2.3 三表式设计 · 主索引 → 随访队列 → 终点事件，构成完整数据链条</div><div>Database Schema</div></div>
+</section>
+
+<!-- 11 · 2.4 对人工智能模型的支撑作用 -->
+<section class="slide dark">
+  <div class="chrome"><div>AI 支撑 · Model Foundation</div><div>11 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 2.4</div>
+    <h2 class="h-xl" data-anim style="font-size:5vw">对人工智能模型的支撑作用</h2>
+    <p class="lead" style="margin-bottom:3vh" data-anim>数据库设计不是单纯存储，而是为 AI 训练和风险预测服务。</p>
+    <div class="grid-3-3" style="margin-top:2vh">
+      <div class="num-card" data-anim><div class="num">01</div><div class="num-body"><div class="num-title">样本纳入与排除</div><div class="num-desc">明确模型训练样本的纳入与排除标准，确保训练集质量可控</div></div></div>
+      <div class="num-card" data-anim><div class="num">02</div><div class="num-body"><div class="num-title">随访窗口统一</div><div class="num-desc">统一患者随访窗口和观察时间，解决不等间隔随访问题</div></div></div>
+      <div class="num-card" data-anim><div class="num">03</div><div class="num-body"><div class="num-title">终点事件界定</div><div class="num-desc">准确界定死亡、住院、并发症、疾病进展、失访等终点事件</div></div></div>
+      <div class="num-card" data-anim><div class="num">04</div><div class="num-body"><div class="num-title">时间序列构建</div><div class="num-desc">构建连续、动态的慢病管理时间序列数据</div></div></div>
+      <div class="num-card" data-anim><div class="num">05</div><div class="num-body"><div class="num-title">算法开发支撑</div><div class="num-desc">支撑风险预测、动态预警、个体化干预和随访管理算法开发</div></div></div>
+      <div class="num-card" data-anim><div class="num">06</div><div class="num-body"><div class="num-title">适用范围明确</div><div class="num-desc">明确不同算法适用的人群范围、触发条件和管理场景</div></div></div>
+    </div>
+  </div>
+  <div class="foot"><div>2.4 AI 模型支撑 · 6 大能力维度</div><div>Model Foundation</div></div>
+</section>
+
+<!-- 12 · 三、RPA 与社服等多源 HIS 系统的连接 -->
+<section class="slide hero light">
+  <div class="chrome"><div>第三章 · RPA 自动化</div><div>12 / 25</div></div>
+  <div class="frame" style="display:grid; gap:6vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Chapter III</div>
+    <h1 class="h-hero" style="font-size:6.2vw" data-anim>RPA 与多源 HIS 系统连接</h1>
+    <p class="lead" style="max-width:58vw" data-anim>解决封闭系统、无接口系统、遗留系统之间的数据互通问题——以合规方式模拟人工操作，补足传统接口对接能力不足。</p>
+  </div>
+  <div class="foot"><div>第三章 · RPA 与社服等多源 HIS 系统的连接</div><div>— · —</div></div>
+</section>
+
+<!-- 13 · 3.1 建设背景 -->
+<section class="slide dark">
+  <div class="chrome"><div>RPA 背景 · Background</div><div>13 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 3.1</div>
+    <h2 class="h-xl" data-anim style="font-size:5.4vw">建设背景：为什么需要 RPA</h2>
+    <div class="grid-2-6-6" style="margin-top:4vh">
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">核心痛点</h3>
+        <div style="font-family:var(--sans-zh); font-size:max(14px,1.1vw); line-height:1.65; opacity:.82">
+          <p style="margin-bottom:1.5vh">社服系统等第三方异源机构系统<strong>不开放标准接口</strong>，无法通过以下常规方式完成数据对接：</p>
+          <ul style="padding-left:1.2em; display:flex; flex-direction:column; gap:1vh"><li>REST API</li><li>数据库直连</li><li>HL7 / FHIR 标准协议</li></ul>
+        </div>
+        <div class="callout" style="margin-top:3vh">本质上不是"破解接口"，而是在合规账号权限范围内，通过自动化浏览器代替人工重复操作。</div>
+      </div>
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">技术链路</h3>
+        <div style="display:flex; flex-direction:column; gap:1.8vh; font-family:var(--sans-zh); font-size:max(13px,1vw); opacity:.82; line-height:1.5">
+          <div style="padding:1.4vh 1.2vw; border-left:2px solid currentColor"><strong>Electron 桌面端</strong> — 整体架构容器</div>
+          <div style="padding:1.4vh 1.2vw; border-left:2px solid currentColor; margin-left:1.2vw"><strong>Vue 3 渲染进程</strong> — 发起 RPA 任务请求</div>
+          <div style="padding:1.4vh 1.2vw; border-left:2px solid currentColor; margin-left:2.4vw"><strong>Node.js 主进程</strong> — 任务调度与执行管理</div>
+          <div style="padding:1.4vh 1.2vw; border-left:2px solid currentColor; margin-left:3.6vw"><strong>Playwright + Chromium</strong> — 控制内置浏览器访问社服系统</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>3.1 建设背景 · 封闭系统 × 无接口 → RPA 自动化方案</div><div>RPA Background</div></div>
+</section>
+
+<!-- 14 · 3.2 功能介绍 (1/2) -->
+<section class="slide light">
+  <div class="chrome"><div>RPA 功能 · Features I</div><div>14 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 3.2 · Part 1</div>
+    <h2 class="h-xl" data-anim style="font-size:5vw">功能介绍：Playwright + Chromium 自动化</h2>
+    <div class="grid-2-6-6" style="margin-top:3vh">
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">浏览器自动化能力</h3>
+        <ul style="display:flex; flex-direction:column; gap:1.4vh; font-family:var(--sans-zh); font-size:max(13px,1vw); line-height:1.55; padding-left:1.2em; opacity:.82">
+          <li>Playwright 控制内置 Chromium，完成页面点击、输入、搜索、表格读取、弹窗操作、表单填写等自动化动作</li>
+          <li>浏览器内置打包，桌面端部署后无需依赖用户本地浏览器环境</li>
+        </ul>
+        <h3 class="h-md" style="margin:3vh 0 2vh">无头 / 有头双模式</h3>
+        <ul style="display:flex; flex-direction:column; gap:1.4vh; font-family:var(--sans-zh); font-size:max(13px,1vw); line-height:1.55; padding-left:1.2em; opacity:.82">
+          <li><strong>无头浏览器</strong>：数据抓取，后台静默运行，不干扰用户</li>
+          <li><strong>有头浏览器</strong>：数据上传，用户可观察自动化过程，必要时人工介入</li>
+        </ul>
+      </div>
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">自动登录与验证码识别</h3>
+        <ul style="display:flex; flex-direction:column; gap:1.4vh; font-family:var(--sans-zh); font-size:max(13px,1vw); line-height:1.55; padding-left:1.2em; opacity:.82">
+          <li>系统自动截图验证码图片</li><li>上传到自建 OCR 服务进行识别</li><li>填入验证码完成登录</li><li>验证码错误时自动刷新并重试</li>
+        </ul>
+        <div class="stat-card" style="margin-top:3vh; border-top:2px solid currentColor; border-color:rgba(127,127,127,.3)">
+          <div class="stat-label">OCR Recognition Rate</div>
+          <div class="stat-nb" style="font-size:5vw">99<span class="stat-unit">%</span></div>
+          <div class="stat-note">验证码识别成功率</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>3.2 功能介绍 (1/2) · Playwright + Chromium + OCR 验证码识别</div><div>RPA Features I</div></div>
+</section>
+
+<!-- 15 · 3.2 功能介绍 (2/2) -->
+<section class="slide dark">
+  <div class="chrome"><div>RPA 功能 · Features II</div><div>15 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 3.2 · Part 2</div>
+    <h2 class="h-xl" data-anim style="font-size:4.6vw">功能介绍：ExtJS 适配 · 可靠性 · 安全</h2>
+    <div class="grid-3-3" style="margin-top:3vh">
+      <div data-anim style="padding:2vh 1.6vw; border-top:2px solid currentColor">
+        <h3 class="h-md" style="font-size:1.8vw; margin-bottom:1.6vh">ExtJS 页面适配</h3>
+        <ul style="display:flex; flex-direction:column; gap:1vh; font-family:var(--sans-zh); font-size:max(12px,.9vw); line-height:1.5; padding-left:1em; opacity:.78">
+          <li>社服系统基于 ExtJS，DOM 结构复杂、动态 ID 较多</li><li>部分元素需 hover 后才渲染</li><li>层级定位 + 文本匹配 + 原生 DOM click</li><li>等待遮罩层消失后再操作</li>
+        </ul>
+        <div style="font-family:var(--serif-zh); font-weight:600; font-size:1.1vw; margin-top:1.6vh; opacity:.9">"高保真模拟输入"策略</div>
+        <div style="font-family:var(--sans-zh); font-size:max(11px,.8vw); opacity:.7; line-height:1.4; margin-top:.6vh">模拟真实用户的点击、全选、删除、逐字符输入、Tab 失焦等动作，确保社服系统正确触发表单校验和数据保存逻辑。</div>
+      </div>
+      <div data-anim style="padding:2vh 1.6vw; border-top:2px solid currentColor">
+        <h3 class="h-md" style="font-size:1.8vw; margin-bottom:1.6vh">可靠性设计</h3>
+        <ul style="display:flex; flex-direction:column; gap:1vh; font-family:var(--sans-zh); font-size:max(12px,.9vw); line-height:1.5; padding-left:1em; opacity:.78">
+          <li><strong>全局互斥锁</strong>：同一时间只运行一个 RPA 任务</li>
+          <li><strong>登录状态检查</strong>：任务开始前检查浏览器状态和登录状态</li>
+          <li><strong>自动恢复</strong>：登录失效自动重新登录；浏览器崩溃自动重建实例</li>
+          <li><strong>异常分类处理</strong>：账号错误、验证码失败、患者无记录、网络超时、浏览器崩溃、ExtJS 遮罩卡死等场景分类处理</li>
+        </ul>
+      </div>
+      <div data-anim style="padding:2vh 1.6vw; border-top:2px solid currentColor">
+        <h3 class="h-md" style="font-size:1.8vw; margin-bottom:1.6vh">安全与部署</h3>
+        <ul style="display:flex; flex-direction:column; gap:1vh; font-family:var(--sans-zh); font-size:max(12px,.9vw); line-height:1.5; padding-left:1em; opacity:.78">
+          <li>凭据通过 <strong>electron-store</strong> 加密存储，不在源码中硬编码</li>
+          <li>RPA 操作运行在<strong>隔离的 Chromium 实例</strong>中</li>
+          <li>数据访问和 OCR 服务均部署在<strong>内网环境</strong>，通信不经过公网</li>
+          <li>浏览器内置打包，无需用户安装额外浏览器</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>3.2 功能介绍 (2/2) · ExtJS 适配 + 可靠性设计 + 安全部署</div><div>RPA Features II</div></div>
+</section>
+
+<!-- 16 · 3.3 关键优势 -->
+<section class="slide light">
+  <div class="chrome"><div>RPA 优势 · Advantages</div><div>16 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 3.3</div>
+    <h2 class="h-xl" data-anim>关键优势</h2>
+    <p class="lead" style="margin-bottom:3vh" data-anim>痛点 → 能力 → 价值：六项核心优势。</p>
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:2.4vw; margin-top:2vh">
+      <div data-anim style="padding:2.4vh 1.6vw; border:1px solid currentColor; border-color:rgba(127,127,127,.2)">
+        <div style="font-family:var(--serif-en); font-style:italic; font-weight:600; font-size:2.8vw; opacity:.3; line-height:1">01</div>
+        <div style="font-family:var(--serif-zh); font-weight:700; font-size:1.4vw; margin:1vh 0">不依赖接口开放</div>
+        <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.5">无需第三方系统提供 API、数据库权限或标准协议支持即可完成数据对接</div>
+      </div>
+      <div data-anim style="padding:2.4vh 1.6vw; border:1px solid currentColor; border-color:rgba(127,127,127,.2)">
+        <div style="font-family:var(--serif-en); font-style:italic; font-weight:600; font-size:2.8vw; opacity:.3; line-height:1">02</div>
+        <div style="font-family:var(--serif-zh); font-weight:700; font-size:1.4vw; margin:1vh 0">适配 ExtJS 等遗留系统</div>
+        <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.5">通过层级定位、高保真模拟输入等策略，适配复杂的动态 DOM 结构</div>
+      </div>
+      <div data-anim style="padding:2.4vh 1.6vw; border:1px solid currentColor; border-color:rgba(127,127,127,.2)">
+        <div style="font-family:var(--serif-en); font-style:italic; font-weight:600; font-size:2.8vw; opacity:.3; line-height:1">03</div>
+        <div style="font-family:var(--serif-zh); font-weight:700; font-size:1.4vw; margin:1vh 0">减少重复录入</div>
+        <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.5">显著减少医生或工作人员在多个系统间的重复录入工作</div>
+      </div>
+      <div data-anim style="padding:2.4vh 1.6vw; border:1px solid currentColor; border-color:rgba(127,127,127,.2)">
+        <div style="font-family:var(--serif-en); font-style:italic; font-weight:600; font-size:2.8vw; opacity:.3; line-height:1">04</div>
+        <div style="font-family:var(--serif-zh); font-weight:700; font-size:1.4vw; margin:1vh 0">支持慢病随访场景</div>
+        <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.5">覆盖高血压、糖尿病等慢病随访数据的抓取与回填</div>
+      </div>
+      <div data-anim style="padding:2.4vh 1.6vw; border:1px solid currentColor; border-color:rgba(127,127,127,.2)">
+        <div style="font-family:var(--serif-en); font-style:italic; font-weight:600; font-size:2.8vw; opacity:.3; line-height:1">05</div>
+        <div style="font-family:var(--serif-zh); font-weight:700; font-size:1.4vw; margin:1vh 0">提升自动化稳定性</div>
+        <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.5">验证码识别、状态恢复、并发锁、异常分类等机制保障任务可靠执行</div>
+      </div>
+      <div data-anim style="padding:2.4vh 1.6vw; border:1px solid currentColor; border-color:rgba(127,127,127,.2)">
+        <div style="font-family:var(--serif-en); font-style:italic; font-weight:600; font-size:2.8vw; opacity:.3; line-height:1">06</div>
+        <div style="font-family:var(--serif-zh); font-weight:700; font-size:1.4vw; margin:1vh 0">低侵入可落地</div>
+        <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.5">在无接口医疗系统之间提供了一种低侵入、可落地的数据互通方式</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>3.3 关键优势 · 6 项核心能力</div><div>RPA Advantages</div></div>
+</section>
+
+<!-- 17 · 四、慢病处方 -->
+<section class="slide dark">
+  <div class="chrome"><div>第四章 · 慢病处方</div><div>17 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Chapter IV</div>
+    <h2 class="h-xl" data-anim style="font-size:5.4vw">慢病处方</h2>
+    <div class="grid-2-6-6" style="margin-top:4vh">
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">核心优势：真实数据支撑</h3>
+        <div style="font-family:var(--sans-zh); font-size:max(14px,1.1vw); line-height:1.65; opacity:.82">
+          <p style="margin-bottom:1.4vh">平台已打通医院真实诊疗数据，能够整合：</p>
+          <ul style="padding-left:1.2em; display:flex; flex-direction:column; gap:1vh"><li><strong>检验检查指标</strong></li><li><strong>病历记录</strong></li><li><strong>用药记录</strong></li><li><strong>随访记录</strong></li></ul>
+        </div>
+      </div>
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">与通用 AI 的本质区别</h3>
+        <div style="display:flex; flex-direction:column; gap:2vh">
+          <div style="padding:1.6vh 1.4vw; border-left:3px solid currentColor">
+            <div style="font-family:var(--serif-zh); font-weight:600; font-size:1.3vw; margin-bottom:.6vh">个性化而非通用模板</div>
+            <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.5">结合患者个人病情变化、历史用药情况、随访状态以及本地区诊疗管理要求</div>
+          </div>
+          <div style="padding:1.6vh 1.4vw; border-left:3px solid currentColor">
+            <div style="font-family:var(--serif-zh); font-weight:600; font-size:1.3vw; margin-bottom:.6vh">长期管理视角</div>
+            <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.5">基于患者长期健康轨迹，而非单次问答的快照式生成</div>
+          </div>
+          <div style="padding:1.6vh 1.4vw; border-left:3px solid currentColor">
+            <div style="font-family:var(--serif-zh); font-weight:600; font-size:1.3vw; margin-bottom:.6vh">基层慢病场景适配</div>
+            <div style="font-family:var(--sans-zh); font-size:max(12px,.9vw); opacity:.72; line-height:1.5">面向基层医疗机构的实际诊疗管理需求，辅助医生提高处方生成效率和管理精准度</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>第四章 · 慢病处方 · 真实数据 + 长期视角 + 基层适配</div><div>Prescription</div></div>
+</section>
+
+<!-- 18 · 五、预测算法（章节过渡页） -->
+<section class="slide hero light">
+  <div class="chrome"><div>第五章 · 预测算法</div><div>18 / 25</div></div>
+  <div class="frame" style="display:grid; gap:5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Chapter V</div>
+    <h1 class="h-hero" style="font-size:7vw" data-anim>预测算法</h1>
+    <p class="lead" style="max-width:60vw" data-anim>基于患者状态变化轨迹，通过离散时间生存模型实现动态风险预测。适用于"事件发生时间不固定、患者状态持续变化、随访记录不等间隔"的慢病管理场景。</p>
+  </div>
+  <div class="foot"><div>第五章 · 预测算法</div><div>— · —</div></div>
+</section>
+
+<!-- 19 · 5.1 预测任务设计 -->
+<section class="slide light">
+  <div class="chrome"><div>预测任务 · Task Design</div><div>19 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 5.1</div>
+    <h2 class="h-xl" data-anim style="font-size:5vw">预测任务设计：五类预测任务</h2>
+    <p class="lead" style="margin-bottom:3vh" data-anim>同一套输入特征可服务多个输出事件。输入统一来自患者基础信息、既往病史、随访记录、检验检查、用药、生活方式、疾病分级、并发症状态等数据。</p>
+    <div style="display:flex; flex-direction:column; gap:1.4vh; margin-top:2vh">
+      <div class="rowline" data-anim style="grid-template-columns:1.3fr 2fr 1.8fr"><div class="k" style="font-size:1.4vw">就诊激活预测</div><div class="v" style="font-size:max(12px,1vw)">预测患者是否需要被重新激活管理（长期未随访、指标异常、管理中断、需主动召回）</div><div class="m" style="font-size:10px">主动提醒 · 复诊通知</div></div>
+      <div class="rowline" data-anim style="grid-template-columns:1.3fr 2fr 1.8fr"><div class="k" style="font-size:1.4vw">转诊风险预测</div><div class="v" style="font-size:max(12px,1vw)">预测患者是否达到转诊标准（血压/血糖长期控制不佳、疑似并发症、疾病分级升高）</div><div class="m" style="font-size:10px">提前识别 · 上转预警</div></div>
+      <div class="rowline" data-anim style="grid-template-columns:1.3fr 2fr 1.8fr"><div class="k" style="font-size:1.4vw">疾病进展预测</div><div class="v" style="font-size:max(12px,1vw)">预测慢病状态是否恶化（危险分层升高、控制状态变差、肾功能下降、靶器官损害）</div><div class="m" style="font-size:10px">早期干预 · 进展预警</div></div>
+      <div class="rowline" data-anim style="grid-template-columns:1.3fr 2fr 1.8fr"><div class="k" style="font-size:1.4vw">并发症预测</div><div class="v" style="font-size:max(12px,1vw)">预测是否发生心脑血管事件、肾功能损害、视网膜病变、神经病变、糖尿病足等</div><div class="m" style="font-size:10px">筛查 · 专病管理 · 分层</div></div>
+      <div class="rowline" data-anim style="grid-template-columns:1.3fr 2fr 1.8fr"><div class="k" style="font-size:1.4vw">预后与转归预测</div><div class="v" style="font-size:max(12px,1vw)">预测病情稳定、加重、住院、严重并发症、死亡、失访或退出管理等最终转归</div><div class="m" style="font-size:10px">长期效果 · 优先级排序</div></div>
+    </div>
+  </div>
+  <div class="foot"><div>5.1 预测任务设计 · 五类预测任务共享输入特征，按业务目标设置不同输出事件</div><div>Prediction Tasks</div></div>
+</section>
+
+<!-- 20 · 5.2 事件-特征变化驱动分桶法 -->
+<section class="slide dark">
+  <div class="chrome"><div>分桶方法 · Bucketing</div><div>20 / 25</div></div>
+  <div class="frame" style="padding-top:2.5vh; overflow:visible">
+    <div class="kicker" data-anim>Section 5.2</div>
+    <h2 class="h-xl" data-anim style="font-size:4.2vw; margin-bottom:1vh">事件-特征变化驱动分桶法</h2>
+    <p class="lead" style="margin-bottom:1.5vh; font-size:max(14px,1.05vw)" data-anim>Event-Feature Change-driven Bucketing — 解决传统分桶三大问题。</p>
+    <div class="grid-3" style="margin:0 0 1.2vh 0; gap:1.8vw">
+      <div data-anim style="padding:.8vh 1vw; border:1px solid rgba(127,127,127,.25); text-align:center"><div style="font-family:var(--mono); font-size:9px; letter-spacing:.2em; opacity:.5; margin-bottom:.4vh">Problem 01</div><div style="font-family:var(--serif-zh); font-weight:600; font-size:1.15vw">数据行数暴涨</div></div>
+      <div data-anim style="padding:.8vh 1vw; border:1px solid rgba(127,127,127,.25); text-align:center"><div style="font-family:var(--mono); font-size:9px; letter-spacing:.2em; opacity:.5; margin-bottom:.4vh">Problem 02</div><div style="font-family:var(--serif-zh); font-weight:600; font-size:1.15vw">类别极度不平衡</div></div>
+      <div data-anim style="padding:.8vh 1vw; border:1px solid rgba(127,127,127,.25); text-align:center"><div style="font-family:var(--mono); font-size:9px; letter-spacing:.2em; opacity:.5; margin-bottom:.4vh">Problem 03</div><div style="font-family:var(--serif-zh); font-weight:600; font-size:1.15vw">精确事件时间丢失</div></div>
+    </div>
+    <p data-anim style="font-family:var(--sans-zh); font-size:max(12px,.95vw); line-height:1.45; opacity:.78; margin-bottom:1.8vh"><span style="font-family:var(--serif-zh); font-weight:600">核心思想：</span>按<strong>特征变化点</strong>和<strong>状态变化点</strong>切分区间，删除中间无信息变化的冗余行，同时保留精确的 enter 和 exit 时间。</p>
+    <div class="compare-table" data-anim style="margin-top:0; gap:2.5vw">
+      <div class="ct-col" style="padding:1.6vh 1.4vw; opacity:.78">
+        <div class="ct-label" style="margin-bottom:1.2vh; font-size:10px">Before · 机械按年分桶</div>
+        <div class="ct-title" style="margin-bottom:1.2vh; font-size:1.3vw">示例：60 岁进入，66 岁事件，63 岁指标异常</div>
+        <table style="width:100%; font-family:var(--mono); font-size:max(10px,.78vw); border-collapse:collapse">
+          <tr style="opacity:.5"><td style="padding:.6vh .4vw">区间</td><td style="padding:.6vh .4vw">指标状态</td><td style="padding:.6vh .4vw">event</td></tr>
+          <tr><td style="padding:.6vh .4vw">60-61</td><td style="padding:.6vh .4vw">正常</td><td style="padding:.6vh .4vw">0</td></tr>
+          <tr><td style="padding:.6vh .4vw">61-62</td><td style="padding:.6vh .4vw">正常</td><td style="padding:.6vh .4vw">0</td></tr>
+          <tr><td style="padding:.6vh .4vw">62-63</td><td style="padding:.6vh .4vw">正常</td><td style="padding:.6vh .4vw">0</td></tr>
+          <tr><td style="padding:.6vh .4vw">63-64</td><td style="padding:.6vh .4vw">异常</td><td style="padding:.6vh .4vw">0</td></tr>
+          <tr><td style="padding:.6vh .4vw">64-65</td><td style="padding:.6vh .4vw">异常</td><td style="padding:.6vh .4vw">0</td></tr>
+          <tr><td style="padding:.6vh .4vw">65-66</td><td style="padding:.6vh .4vw">异常</td><td style="padding:.6vh .4vw">1</td></tr>
+        </table>
+        <div style="font-family:var(--sans-zh); font-size:max(10px,.75vw); opacity:.55; margin-top:.8vh">6 行 · 大量冗余</div>
+      </div>
+      <div class="ct-col" style="padding:1.6vh 1.4vw">
+        <div class="ct-label" style="margin-bottom:1.2vh; font-size:10px">After · 优化后分桶</div>
+        <div class="ct-title" style="margin-bottom:1.2vh; font-size:1.3vw">仅按特征变化点与事件点切分</div>
+        <table style="width:100%; font-family:var(--mono); font-size:max(10px,.78vw); border-collapse:collapse">
+          <tr style="opacity:.5"><td style="padding:.6vh .4vw">id</td><td style="padding:.6vh .4vw">start</td><td style="padding:.6vh .4vw">stop</td><td style="padding:.6vh .4vw">指标</td><td style="padding:.6vh .4vw">event</td></tr>
+          <tr><td style="padding:.6vh .4vw">1</td><td style="padding:.6vh .4vw">60</td><td style="padding:.6vh .4vw">63</td><td style="padding:.6vh .4vw">正常</td><td style="padding:.6vh .4vw">0</td></tr>
+          <tr><td style="padding:.6vh .4vw">1</td><td style="padding:.6vh .4vw">63</td><td style="padding:.6vh .4vw">66</td><td style="padding:.6vh .4vw">异常</td><td style="padding:.6vh .4vw">1</td></tr>
+        </table>
+        <div style="font-family:var(--serif-zh); font-weight:600; font-size:max(11px,.82vw); margin-top:.8vh">2 行 · 保留关键时间信息</div>
+        <div style="font-family:var(--sans-zh); font-size:max(10px,.72vw); opacity:.55; margin-top:.6vh; line-height:1.4">6 行压缩为 2 行，保留 63 岁指标变化与 66 岁事件发生时间。</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>5.2 事件-特征变化驱动分桶法 · 减少冗余行 + 保留关键时间信息</div><div>Event-Feature Bucketing</div></div>
+</section>
+
+<!-- 21 · 5.3 离散时间生存模型：问题定义 -->
+<section class="slide light">
+  <div class="chrome"><div>生存模型 · Model Definition</div><div>21 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 5.3 · Part 1</div>
+    <h2 class="h-xl" data-anim style="font-size:4.8vw">离散时间生存模型：问题定义</h2>
+    <p data-anim style="font-family:var(--sans-zh); font-size:max(14px,1.1vw); line-height:1.6; opacity:.82; margin:2vh 0">传统离散时间比例风险模型要求协变量影响满足比例风险结构。<strong>机器学习离散时间生存模型</strong>放宽这个限制，直接学习个体在每个时间区间内的条件事件风险。</p>
+    <div data-anim style="margin-top:2vh">
+      <h3 class="h-md" style="margin-bottom:2vh">Hazard 定义</h3>
+      <div class="formula-block" data-anim>\[ h_{ij} = P(T_i \leq t_{ij} \mid T_i > t_{i,j-1}, x_{i,j-1}) \]</div>
+      <div class="formula-block" style="margin-top:1.5vh" data-anim>\[ h_{ij} = f_\theta(x_{i,j-1}, t_{i,j-1}, t_{ij}) \]</div>
+    </div>
+    <div data-anim style="margin-top:2.5vh; display:grid; grid-template-columns:repeat(5,1fr); gap:1.5vw">
+      <div style="padding:1.2vh 1vw; border-top:1px solid currentColor; border-color:rgba(127,127,127,.3)"><div style="font-family:var(--mono); font-size:10px; letter-spacing:.2em; opacity:.5">x<sub>i,j−1</sub></div><div style="font-family:var(--sans-zh); font-size:max(11px,.8vw); opacity:.72; margin-top:.4vh">区间开始前个体特征</div></div>
+      <div style="padding:1.2vh 1vw; border-top:1px solid currentColor; border-color:rgba(127,127,127,.3)"><div style="font-family:var(--mono); font-size:10px; letter-spacing:.2em; opacity:.5">t<sub>i,j−1</sub></div><div style="font-family:var(--sans-zh); font-size:max(11px,.8vw); opacity:.72; margin-top:.4vh">区间开始时间</div></div>
+      <div style="padding:1.2vh 1vw; border-top:1px solid currentColor; border-color:rgba(127,127,127,.3)"><div style="font-family:var(--mono); font-size:10px; letter-spacing:.2em; opacity:.5">t<sub>ij</sub></div><div style="font-family:var(--sans-zh); font-size:max(11px,.8vw); opacity:.72; margin-top:.4vh">区间结束时间</div></div>
+      <div style="padding:1.2vh 1vw; border-top:1px solid currentColor; border-color:rgba(127,127,127,.3)"><div style="font-family:var(--mono); font-size:10px; letter-spacing:.2em; opacity:.5">f<sub>θ</sub></div><div style="font-family:var(--sans-zh); font-size:max(11px,.8vw); opacity:.72; margin-top:.4vh">机器学习模型</div></div>
+      <div style="padding:1.2vh 1vw; border-top:1px solid currentColor; border-color:rgba(127,127,127,.3)"><div style="font-family:var(--mono); font-size:10px; letter-spacing:.2em; opacity:.5">h<sub>ij</sub></div><div style="font-family:var(--sans-zh); font-size:max(11px,.8vw); opacity:.72; margin-top:.4vh">区间事件概率</div></div>
+    </div>
+    <div class="callout" style="margin-top:3vh" data-anim>模型在每个时间区间输出条件事件风险 h<sub>ij</sub>，预测出每个区间的 hazard 后，即可组合出生存概率。</div>
+  </div>
+  <div class="foot"><div>5.3 问题定义 · Hazard 函数 + 符号体系</div><div>Model Definition</div></div>
+</section>
+
+<!-- 22 · 5.3 生存概率与累计事件概率 -->
+<section class="slide dark">
+  <div class="chrome"><div>生存概率 · Survival Probability</div><div>22 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 5.3 · Part 2</div>
+    <h2 class="h-xl" data-anim style="font-size:4.6vw">生存概率与累计事件概率</h2>
+    <p data-anim style="font-family:var(--sans-zh); font-size:max(14px,1.1vw); line-height:1.6; opacity:.82; margin:2vh 0">个体 <em>i</em> 在前 <em>j</em> 个区间的预测风险为 h<sub>i1</sub>, h<sub>i2</sub>, …, h<sub>ij</sub>，活到 t<sub>j</sub> 的概率：</p>
+    <div class="formula-block" data-anim>\[ S_i(t_j) = \prod_{m=1}^{j}(1 - h_{im}) \]</div>
+    <p data-anim style="font-family:var(--sans-zh); font-size:max(14px,1.1vw); line-height:1.6; opacity:.82; margin:2vh 0">累计事件概率：</p>
+    <div class="formula-block" data-anim>\[ P(T_i \leq t_j) = 1 - S_i(t_j) \]</div>
+    <div style="margin-top:3vh; display:flex; gap:2vw; align-items:center" data-anim>
+      <div style="flex:1; padding:2vh 1.5vw; border:1px solid currentColor; border-color:rgba(127,127,127,.25); text-align:center"><div style="font-family:var(--mono); font-size:10px; letter-spacing:.22em; opacity:.5; margin-bottom:1vh">Step 1</div><div style="font-family:var(--serif-zh); font-weight:600; font-size:1.2vw">区间 hazard</div><div style="font-family:var(--sans-zh); font-size:max(11px,.8vw); opacity:.65; margin-top:.4vh">h<sub>i1</sub> … h<sub>ij</sub></div></div>
+      <div style="font-family:var(--serif-en); font-size:2vw; opacity:.3">→</div>
+      <div style="flex:1; padding:2vh 1.5vw; border:1px solid currentColor; border-color:rgba(127,127,127,.25); text-align:center"><div style="font-family:var(--mono); font-size:10px; letter-spacing:.22em; opacity:.5; margin-bottom:1vh">Step 2</div><div style="font-family:var(--serif-zh); font-weight:600; font-size:1.2vw">生存概率</div><div style="font-family:var(--sans-zh); font-size:max(11px,.8vw); opacity:.65; margin-top:.4vh">S<sub>i</sub>(t<sub>j</sub>)</div></div>
+      <div style="font-family:var(--serif-en); font-size:2vw; opacity:.3">→</div>
+      <div style="flex:1; padding:2vh 1.5vw; border:1px solid currentColor; border-color:rgba(127,127,127,.25); text-align:center"><div style="font-family:var(--mono); font-size:10px; letter-spacing:.22em; opacity:.5; margin-bottom:1vh">Step 3</div><div style="font-family:var(--serif-zh); font-weight:600; font-size:1.2vw">累计事件概率</div><div style="font-family:var(--sans-zh); font-size:max(11px,.8vw); opacity:.65; margin-top:.4vh">1 − S<sub>i</sub>(t<sub>j</sub>)</div></div>
+      <div style="font-family:var(--serif-en); font-size:2vw; opacity:.3">→</div>
+      <div style="flex:1; padding:2vh 1.5vw; border:1px solid currentColor; border-color:rgba(127,127,127,.25); text-align:center"><div style="font-family:var(--mono); font-size:10px; letter-spacing:.22em; opacity:.5; margin-bottom:1vh">Step 4</div><div style="font-family:var(--serif-zh); font-weight:600; font-size:1.2vw">风险预测结果</div><div style="font-family:var(--sans-zh); font-size:max(11px,.8vw); opacity:.65; margin-top:.4vh">Risk Score</div></div>
+    </div>
+  </div>
+  <div class="foot"><div>5.3 生存概率 · 区间 hazard → 生存概率 → 累计事件概率 → 风险预测结果</div><div>Survival Probability</div></div>
+</section>
+
+<!-- 23 · 5.3 损失函数 -->
+<section class="slide light">
+  <div class="chrome"><div>损失函数 · Loss Function</div><div>23 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Section 5.3 · Part 3</div>
+    <h2 class="h-xl" data-anim style="font-size:4.6vw">离散时间生存模型：损失函数</h2>
+    <p data-anim style="font-family:var(--sans-zh); font-size:max(14px,1.1vw); line-height:1.6; opacity:.82; margin:1.5vh 0">对每个个体、每个时间区间，模型输出 h<sub>ij</sub> = f<sub>θ</sub>( x<sub>i,j−1</sub> , t<sub>i,j−1</sub> , t<sub>ij</sub> )。事件区间似然贡献为 h<sub>ij</sub>，非事件区间为 1 − h<sub>ij</sub>。整体条件似然取负对数：</p>
+    <div class="formula-block" data-anim>\[ \mathcal{L}(\theta) = -\sum_{i=1}^{n}\sum_{j=1}^{k_i}\left[Y_{ij}\log h_{ij} + (1-Y_{ij})\log(1-h_{ij})\right] \]</div>
+    <div class="grid-2-6-6" style="margin-top:2.5vh">
+      <div data-anim>
+        <h3 class="h-md" style="font-size:1.7vw; margin-bottom:1.6vh">符号说明</h3>
+        <ul style="display:flex; flex-direction:column; gap:1vh; font-family:var(--sans-zh); font-size:max(13px,1vw); line-height:1.5; padding-left:1.2em; opacity:.8">
+          <li><strong>n</strong>：个体数量</li><li><strong>k<sub>i</sub></strong>：第 i 个个体的观察区间数量</li><li><strong>Y<sub>ij</sub></strong>：事件标签（0 或 1）</li><li><strong>h<sub>ij</sub></strong>：模型预测的区间事件概率</li>
+        </ul>
+        <div class="callout" style="margin-top:2vh; font-size:max(14px,1.1vw)">该 Loss 本质上是<strong>二分类似然在生存时间区间上的扩展</strong>。</div>
+      </div>
+      <div data-anim>
+        <h3 class="h-md" style="font-size:1.7vw; margin-bottom:1.6vh">两种情况的训练推力</h3>
+        <div style="padding:2vh 1.5vw; border-left:3px solid currentColor; margin-bottom:2vh">
+          <div style="font-family:var(--serif-zh); font-weight:600; font-size:1.2vw; margin-bottom:.6vh">事件区间：Y<sub>ij</sub> = 1</div>
+          <div style="font-family:var(--sans-zh); font-size:max(12px,.95vw); opacity:.78; line-height:1.5">损失项 = −log h<sub>ij</sub>，模型必须把 h<sub>ij</sub> 预测得<strong>越高越好</strong></div>
+        </div>
+        <div style="padding:2vh 1.5vw; border-left:3px solid currentColor">
+          <div style="font-family:var(--serif-zh); font-weight:600; font-size:1.2vw; margin-bottom:.6vh">非事件区间：Y<sub>ij</sub> = 0</div>
+          <div style="font-family:var(--sans-zh); font-size:max(12px,.95vw); opacity:.78; line-height:1.5">损失项 = −log(1 − h<sub>ij</sub>)，模型必须把 h<sub>ij</sub> 预测得<strong>越低越好</strong></div>
+        </div>
+        <p style="font-family:var(--serif-zh); font-weight:500; font-size:max(14px,1.1vw); margin-top:2vh; opacity:.88">→ 在真正发生事件的区间给出高风险，在未发生事件的区间给出低风险。</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>5.3 损失函数 · 负对数似然 + 二分类似然的时间区间扩展</div><div>Loss Function</div></div>
+</section>
+
+<!-- 24 · 六、医保费用预测、资源调配与智能门诊随访 -->
+<section class="slide dark">
+  <div class="chrome"><div>第六章 · 应用场景</div><div>24 / 25</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Chapter VI</div>
+    <h2 class="h-xl" data-anim style="font-size:4.6vw">医保费用预测、资源调配与智能门诊随访</h2>
+    <p class="lead" style="margin:2.5vh 0" data-anim>基于门诊量、挂号记录、就诊人次、疾病谱、年龄结构和历史医疗支出数据形成预测能力。</p>
+    <div class="grid-3-3" style="margin-top:2vh">
+      <div data-anim style="padding:2.4vh 1.6vw; border-top:2px solid currentColor">
+        <h3 class="h-md" style="font-size:1.7vw; margin-bottom:1.6vh">门诊峰谷预测</h3>
+        <ul style="display:flex; flex-direction:column; gap:1vh; font-family:var(--sans-zh); font-size:max(12px,.9vw); line-height:1.5; padding-left:1.2em; opacity:.78">
+          <li>按小时或分时段统计和预测患者到诊人数</li><li>根据挂号数据形成计数型分析结果</li><li>识别患者集中到诊的时间峰谷和空间分布差异</li><li><strong>患者端</strong>：提供次日就诊建议</li><li><strong>管理端</strong>：提供未来一周至一个月的门诊峰谷预测</li>
+        </ul>
+      </div>
+      <div data-anim style="padding:2.4vh 1.6vw; border-top:2px solid currentColor">
+        <h3 class="h-md" style="font-size:1.7vw; margin-bottom:1.6vh">医疗资源调配</h3>
+        <ul style="display:flex; flex-direction:column; gap:1vh; font-family:var(--sans-zh); font-size:max(12px,.9vw); line-height:1.5; padding-left:1.2em; opacity:.78">
+          <li>刻画就诊需求与医疗资源供给之间的错位</li><li>针对基层医疗机构不分专科、资源利用不均衡等情况</li><li>辅助医院进行门诊排班、随访安排和资源调配</li><li>面向<strong>卫健管理端</strong>提供区域级资源规划依据</li>
+        </ul>
+      </div>
+      <div data-anim style="padding:2.4vh 1.6vw; border-top:2px solid currentColor">
+        <h3 class="h-md" style="font-size:1.7vw; margin-bottom:1.6vh">医保费用预测与监测</h3>
+        <ul style="display:flex; flex-direction:column; gap:1vh; font-family:var(--sans-zh); font-size:max(12px,.9vw); line-height:1.5; padding-left:1.2em; opacity:.78">
+          <li>结合就诊人数、疾病结构和历史费用数据</li><li>支撑医保费用预测与医保支出监测</li><li>可面向<strong>患者端、医院端、卫健管理端</strong>提供不同决策支持</li><li>支持区域医保基金支出趋势分析与预警</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>第六章 · 医保费用预测、资源调配与智能门诊随访 · 三大应用方向</div><div>Applications</div></div>
+</section>
+
+<!-- 25 · 总结页 -->
+<section class="slide hero dark">
+  <div class="chrome"><div>总结 · Summary</div><div>25 / 25</div></div>
+  <div class="frame" style="display:grid; gap:4vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>In Summary</div>
+    <h1 class="h-hero" style="font-size:7.5vw" data-anim>iCare</h1>
+    <h2 class="h-sub" data-anim>医防融合协同平台</h2>
+    <div style="display:flex; gap:2.5vw; margin:2vh 0" data-anim><span class="tag">数据贯通</span><span class="tag">RPA 互通</span><span class="tag">AI 预测</span><span class="tag">慢病闭环管理</span></div>
+    <p class="lead" style="max-width:64vw" data-anim>以全周期数据为基础，通过 RPA 补足封闭系统对接能力，通过离散时间生存模型实现慢病风险预测，最终支撑基层医疗机构的随访、干预、转诊、资源调配和医保费用管理。</p>
+    <div class="meta-row" data-anim><span>iCare 医防融合协同平台</span><span>·</span><span>系统方案汇报</span><span>·</span><span>2026</span></div>
+  </div>
+  <div class="foot"><div>感谢聆听 · iCare 医防融合协同平台</div><div>— Fin —</div></div>
+</section>
+
+</div>
+<div id="nav"></div>
+
+<script>
+const VS=`attribute vec2 position;void main(){gl_Position=vec4(position,0.0,1.0);}`;
+const FS_DARK=`precision highp float;uniform vec2 u_resolution;uniform float u_time;uniform vec2 u_mouse;vec3 palette(float t,vec3 a,vec3 b,vec3 c,vec3 d){return a+b*cos(6.28318*(c*t+d));}void main(){vec2 uv=gl_FragCoord.xy/u_resolution.xy;vec2 p=uv*2.0-1.0;p.x*=u_resolution.x/u_resolution.y;vec2 m=u_mouse*2.0-1.0;m.x*=u_resolution.x/u_resolution.y;float md=length(p-m);float mr=sin(md*15.0-u_time*4.0)*exp(-md*3.0);p+=mr*0.08;vec2 p0=p;for(float i=1.0;i<4.0;i++){p.x+=0.1/i*sin(i*3.0*p.y+u_time*0.4)+0.05;p.y+=0.1/i*cos(i*2.0*p.x+u_time*0.3)-0.05;}float r=length(p);float ang=atan(p.y,p.x);vec3 a=vec3(0.12,0.12,0.13);vec3 b=vec3(0.03,0.04,0.05);vec3 c=vec3(1.0,1.0,1.0);vec3 d=vec3(0.1,0.2,0.4);vec3 col=palette(r*1.5+p0.x*0.5+u_time*0.1,a,b,c,d);float disp=sin(r*25.0-u_time*1.5+ang*2.0)*0.5+0.5;col+=vec3(disp*0.015,disp*0.01,disp*0.02);float hi=pow(sin(p.x*4.0+p.y*3.0+u_time)*0.5+0.5,8.0);col+=hi*0.08;vec3 base=vec3(0.05,0.05,0.06);col=mix(base,col,0.85);gl_FragColor=vec4(col,1.0);}`;
+const FS_LIGHT=`precision highp float;uniform vec2 u_resolution;uniform float u_time;uniform vec2 u_mouse;float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float noise(vec2 p){vec2 i=floor(p),f=fract(p);float a=hash(i),b=hash(i+vec2(1,0));float c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));vec2 u=f*f*(3.0-2.0*f);return mix(a,b,u.x)+(c-a)*u.y*(1.0-u.x)+(d-b)*u.x*u.y;}float fbm(vec2 p){float v=0.0,a=0.5;mat2 m=mat2(0.80,0.60,-0.60,0.80);for(int i=0;i<5;i++){v+=a*noise(p);p=m*p*2.02;a*=0.5;}return v;}void main(){vec2 uv=gl_FragCoord.xy/u_resolution.xy;vec2 p=uv;p.x*=u_resolution.x/u_resolution.y;vec2 m=u_mouse;m.x*=u_resolution.x/u_resolution.y;vec2 md=p-m;float dl=length(md);p+=normalize(md+vec2(0.0001))*exp(-dl*5.0)*0.03;vec2 q=vec2(fbm(p*1.8+u_time*0.07),fbm(p*1.8+vec2(5.2,1.3)+u_time*0.06));vec2 r=vec2(fbm(p*2.0+q*1.3+vec2(1.7,9.2)+u_time*0.05),fbm(p*2.0+q*1.3+vec2(8.3,2.8)+u_time*0.04));float f=fbm(p*2.2+r*1.5);vec3 silverDark=vec3(0.86,0.85,0.84);vec3 paper=vec3(0.955,0.945,0.925);vec3 col=mix(silverDark,paper,f);float ph=r.x*2.2+u_time*0.35;col+=vec3(0.78,0.62,0.92)*sin(ph)*0.055;col+=vec3(0.55,0.72,0.95)*sin(ph*0.8+2.0)*0.05;float hl=smoothstep(0.48,0.92,f);col+=hl*0.06;gl_FragColor=vec4(col,1.0);}`;
+const mouse={x:0.5,y:0.5};
+addEventListener('mousemove',e=>{mouse.x=e.clientX/innerWidth;mouse.y=e.clientY/innerHeight});
+function bootGL(canvasId,fsSrc){
+  const canvas=document.getElementById(canvasId);
+  const gl=canvas.getContext('webgl',{alpha:false,antialias:true});
+  if(!gl) return ()=>false;
+  const mk=(t,s)=>{const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh};
+  const prog=gl.createProgram();
+  gl.attachShader(prog,mk(gl.VERTEX_SHADER,VS));
+  gl.attachShader(prog,mk(gl.FRAGMENT_SHADER,fsSrc));
+  gl.linkProgram(prog);gl.useProgram(prog);
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+  const pos=gl.getAttribLocation(prog,'position');
+  gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+  const lRes=gl.getUniformLocation(prog,'u_resolution'),lT=gl.getUniformLocation(prog,'u_time'),lM=gl.getUniformLocation(prog,'u_mouse');
+  const resize=()=>{const d=Math.min(window.devicePixelRatio||1,2);canvas.width=innerWidth*d;canvas.height=innerHeight*d;gl.viewport(0,0,canvas.width,canvas.height);};
+  addEventListener('resize',resize);resize();
+  return (tSec)=>{gl.uniform2f(lRes,canvas.width,canvas.height);gl.uniform1f(lT,tSec);gl.uniform2f(lM,mouse.x,1-mouse.y);gl.drawArrays(gl.TRIANGLES,0,6);return true;};
+}
+let drawDark=null,drawLight=null,glRAF=0,glT0=Date.now();
+function startGL(){
+  if(window.__lowPowerMode||glRAF) return;
+  if(!drawDark) drawDark=bootGL('bg-dark',FS_DARK);
+  if(!drawLight) drawLight=bootGL('bg-light',FS_LIGHT);
+  glT0=Date.now();
+  function loop(){if(window.__lowPowerMode){glRAF=0;return;}const t=(Date.now()-glT0)/1000;drawDark(t);drawLight(t);glRAF=requestAnimationFrame(loop);}
+  glRAF=requestAnimationFrame(loop);
+}
+function stopGL(){if(glRAF) cancelAnimationFrame(glRAF);glRAF=0;}
+startGL();
+addEventListener('ppt-low-power-change',e=>{e.detail.on?stopGL():startGL();});
+
+const deck=document.getElementById('deck');
+const slides=deck.querySelectorAll('.slide');
+const nav=document.getElementById('nav');
+let idx=0,total=slides.length,lock=false;
+deck.style.width=(total*100)+'vw';
+slides.forEach((s,i)=>{const b=document.createElement('button');b.className='dot';b.dataset.i=i;b.setAttribute('aria-label','Page '+(i+1));b.onclick=()=>go(i);nav.appendChild(b);});
+function go(n){
+  if(lock)return;
+  idx=Math.max(0,Math.min(total-1,n));
+  window.__currentSlideIndex=idx;
+  deck.style.transform=`translateX(${-idx*100}vw)`;
+  nav.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+  const el=slides[idx];
+  const th=el.dataset.theme||(el.classList.contains('light')?'light':(el.classList.contains('dark')?'dark':'dark'));
+  document.body.classList.toggle('light-bg',th==='light');
+  if(window.__playSlide) setTimeout(()=>window.__playSlide(idx),50);
+  lock=true;setTimeout(()=>lock=false,200);
+}
+let overviewOn=false;
+const ov=document.createElement('div');
+ov.id='overview';ov.style.cssText='position:fixed;inset:0;z-index:100;background:rgba(var(--ink-rgb),.92);backdrop-filter:blur(12px);display:none;overflow-y:auto;padding:4vh 4vw';
+document.body.appendChild(ov);
+function buildOverview(){
+  ov.innerHTML='';
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:2vh 1.6vw;max-width:90vw;margin:0 auto';
+  slides.forEach((s,i)=>{
+    const card=document.createElement('div');
+    card.style.cssText='cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid '+(i===idx?'rgba(var(--paper-rgb),.8)':'rgba(var(--paper-rgb),.15)')+';transition:border-color .2s';
+    card.onmouseenter=()=>card.style.borderColor='rgba(var(--paper-rgb),.6)';
+    card.onmouseleave=()=>card.style.borderColor=i===idx?'rgba(var(--paper-rgb),.8)':'rgba(var(--paper-rgb),.15)';
+    const wrap=document.createElement('div');
+    wrap.style.cssText='width:100%;aspect-ratio:16/9;overflow:hidden;position:relative;pointer-events:none;background:'+(s.classList.contains('light')?'var(--paper)':'var(--ink)');
+    const clone=s.cloneNode(true);
+    clone.style.cssText='width:100vw;height:100vh;transform:scale('+(1/4.5)+');transform-origin:top left;position:absolute;top:0;left:0;pointer-events:none';
+    wrap.appendChild(clone);
+    const label=document.createElement('div');
+    label.style.cssText='padding:6px 10px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--paper);opacity:.7';
+    label.textContent=(i+1)+' / '+total;
+    card.appendChild(wrap);card.appendChild(label);
+    card.onclick=()=>{toggleOverview();go(i)};
+    grid.appendChild(card);
+  });
+  ov.appendChild(grid);
+}
+function toggleOverview(){overviewOn=!overviewOn;if(overviewOn){buildOverview();ov.style.display='block';}else{ov.style.display='none';}}
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();toggleOverview();return;}
+  if(e.key&&e.key.toLowerCase()==='b'&&!e.metaKey&&!e.ctrlKey&&!e.altKey){e.preventDefault();window.__setLowPowerMode(!window.__lowPowerMode);return;}
+  if(overviewOn)return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '||e.key==='ArrowDown'){if(window.__pipeAdvance&&window.__pipeAdvance()) return;go(idx+1);return;}
+  if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp')go(idx-1);
+  if(e.key==='Home')go(0);
+  if(e.key==='End')go(total-1);
+});
+let wheelTO=null,wheelAcc=0;
+addEventListener('wheel',e=>{wheelAcc+=e.deltaY+e.deltaX;if(Math.abs(wheelAcc)>50){if(wheelAcc>0&&window.__pipeAdvance&&window.__pipeAdvance()){wheelAcc=0;}else{go(idx+(wheelAcc>0?1:-1));wheelAcc=0;}}clearTimeout(wheelTO);wheelTO=setTimeout(()=>wheelAcc=0,150);},{passive:true});
+let tx=0,ty=0;
+addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+addEventListener('touchend',e=>{const dx=(e.changedTouches[0].clientX-tx);const dy=(e.changedTouches[0].clientY-ty);if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){if(dx<0&&window.__pipeAdvance&&window.__pipeAdvance()) return;go(idx+(dx<0?1:-1));}},{passive:true});
+go(0);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>document.addEventListener('DOMContentLoaded',()=>{renderMathInElement(document.getElementById('deck'),{delimiters:[{left:'\\[',right:'\\]',display:true}]});});</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+<script type="module">
+let motion;
+try{motion=await import('./assets/motion.min.js');}catch(e1){try{motion=await import('https://cdn.jsdelivr.net/npm/motion@11.11.17/+esm');}catch(e2){document.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='1';el.style.transform='none'});}}
+if(motion){
+  const{animate,stagger}=motion;
+  document.body.classList.add('motion-ready');
+  const EASE=[.22,1,.36,1];
+  const slides=[...document.querySelectorAll('.slide')];
+  let pipeStep=-1,lastIdx=-1;
+  function resetAnims(slide){slide.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='';el.style.transform=''});}
+  function revealStatic(slide){resetAnims(slide);document.getAnimations?.().forEach(a=>a.cancel());slide.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='1';el.style.transform='none'});}
+  function playSlide(i){
+    const slide=slides[i];if(!slide) return;lastIdx=i;
+    const recipe=slide.dataset.animate||(slide.classList.contains('hero')?'hero':'cascade');
+    if(window.__lowPowerMode){revealStatic(slide);return;}
+    if(recipe==='pipeline'){pipeStep=-1;slide.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='0.15';el.style.transform='none'});return;}
+    resetAnims(slide);const all=[...slide.querySelectorAll('[data-anim]')];if(!all.length) return;
+    if(recipe==='hero'){animate(all,{opacity:[0,1],y:[14,0]},{duration:.9,delay:stagger(.16,{start:.2}),easing:EASE});return;}
+    animate(all,{opacity:[0,1],y:[16,0]},{duration:.75,delay:stagger(.1,{start:.15}),easing:EASE});
+  }
+  function pipeAdvance(){return false;}
+  window.__playSlide=playSlide;window.__pipeAdvance=pipeAdvance;
+  playSlide(0);
+}
+</script>
+</body>
+</html>
