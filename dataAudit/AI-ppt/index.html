@@ -1,0 +1,1756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI慢病管理体系说明 · iCare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@300;400;500;600&family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  :root{
+    /* ============ 主题色(默认:🖋 墨水经典) ============
+       切换主题:从 references/themes.md 复制对应的 :root 块
+       整体替换这几行(--ink / --ink-rgb / --paper / --paper-rgb)
+       其他地方散落的 rgba() 都走 var(--ink-rgb) / var(--paper-rgb),无需逐处改 */
+    --ink:#0a0a0b;
+    --ink-rgb:10,10,11;
+    --paper:#f1efea;
+    --paper-rgb:241,239,234;
+    --paper-tint:#e8e5de;
+    --ink-tint:#18181a;
+
+    /* ============ 字体(跨主题固定) ============ */
+    --mono:"IBM Plex Mono",ui-monospace,monospace;
+    --serif-en:"Playfair Display","Source Serif 4",Georgia,serif;
+    --serif-body-en:"Source Serif 4",Georgia,serif;
+    --serif-zh:"Noto Serif SC",source-han-serif-sc,serif;
+    --sans-zh:"Noto Sans SC",source-han-sans-sc,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:var(--ink);color:var(--paper);font-family:var(--sans-zh);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+
+  /* ============ WebGL 双背景 ============ */
+  canvas.bg{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block;transition:opacity 1.2s ease}
+  canvas#bg-light{opacity:0}
+  canvas#bg-dark{opacity:1}
+  body.light-bg canvas#bg-light{opacity:1}
+  body.light-bg canvas#bg-dark{opacity:0}
+  body.low-power canvas.bg{display:none!important}
+
+  /* ============ Deck 容器 + 翻页 ============ */
+  /* width: NSLIDES * 100vw，会在 JS 里动态矫正 */
+  #deck{position:fixed;inset:0;width:10000vw;height:100vh;display:flex;flex-wrap:nowrap;transition:none;z-index:10;will-change:transform}
+  .slide{width:100vw;height:100vh;flex:0 0 100vw;position:relative;padding:6vh 6vw 10vh 6vw;display:flex;flex-direction:column;overflow:hidden}
+  .slide.light{color:var(--ink);background:var(--paper)}
+  .slide.dark{color:var(--paper);background:var(--ink)}
+
+  /* 默认页：遮罩较厚，保证文字可读 */
+  .slide::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;transition:background .7s ease}
+  .slide.light::before{background:rgba(var(--paper-rgb),.78);backdrop-filter:blur(3px)}
+  .slide.dark::before{background:rgba(var(--ink-rgb),.78);backdrop-filter:blur(3px)}
+  /* Hero 页：遮罩大幅降低，让 WebGL 背景明显透出 */
+  .slide.hero.light::before{background:rgba(var(--paper-rgb),.16);backdrop-filter:none}
+  .slide.hero.dark::before{background:rgba(var(--ink-rgb),.12);backdrop-filter:none}
+  /* Hero 页顶底微弱渐隐，保证 chrome/foot 区域可读 */
+  .slide.hero::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none}
+  .slide.hero.light::after{background:linear-gradient(180deg,rgba(var(--paper-rgb),.28) 0%,rgba(var(--paper-rgb),0) 14%,rgba(var(--paper-rgb),0) 86%,rgba(var(--paper-rgb),.28) 100%)}
+  .slide.hero.dark::after{background:linear-gradient(180deg,rgba(var(--ink-rgb),.32) 0%,rgba(var(--ink-rgb),0) 14%,rgba(var(--ink-rgb),0) 86%,rgba(var(--ink-rgb),.32) 100%)}
+
+  /* ============ Magazine chrome：顶部 meta + 底部 foot ============ */
+  .chrome{display:flex;justify-content:space-between;align-items:flex-start;font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;opacity:.7}
+  .chrome .left,.chrome .right{display:flex;gap:2.4em;align-items:center}
+  .chrome .sep{width:40px;height:1px;background:currentColor;opacity:.4}
+  .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.55}
+  .foot .title{font-family:var(--serif-zh);font-weight:400;letter-spacing:.05em;text-transform:none;opacity:.75;font-size:13px}
+
+  .tag{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;padding:6px 14px;border:1px solid currentColor;opacity:.85}
+  .rule{width:100%;height:1px;background:currentColor;opacity:.25;margin:3vh 0}
+  .rule.v{width:1px;height:100%;margin:0}
+
+  /* ============ 字体规则 ============
+     · 衬线（Noto Serif SC / Playfair）：大标题、重点金句、数字
+     · 非衬线（Noto Sans SC）：正文描述、body、补充说明
+     · 等宽（IBM Plex Mono）：kicker、meta 小标签、foot 右侧
+  */
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.3em;text-transform:uppercase;opacity:.6;margin-bottom:2.6vh}
+  .display{font-family:var(--serif-en);font-weight:700;font-size:11vw;line-height:.92;letter-spacing:-.025em}
+  .display-zh{font-family:var(--serif-zh);font-weight:700;font-size:7.8vw;line-height:1.04;letter-spacing:-.005em}
+  .h1-zh{font-family:var(--serif-zh);font-weight:700;font-size:4.6vw;line-height:1.12;letter-spacing:-.005em}
+  .h2-zh{font-family:var(--serif-zh);font-weight:600;font-size:3.2vw;line-height:1.2;letter-spacing:0}
+  .h3-zh{font-family:var(--serif-zh);font-weight:500;font-size:1.9vw;line-height:1.35}
+  .body-zh{font-family:var(--sans-zh);font-weight:400;font-size:max(15px,1.22vw);line-height:1.75;opacity:.82;letter-spacing:.01em}
+  .body-serif{font-family:var(--serif-zh);font-weight:400;font-size:max(15px,1.3vw);line-height:1.65;opacity:.88}
+  .lead{font-family:var(--serif-zh);font-weight:400;font-size:1.9vw;line-height:1.4;opacity:.85}
+  .meta{font-family:var(--mono);font-size:max(11px,.88vw);letter-spacing:.16em;text-transform:uppercase;opacity:.6}
+  .big-num{font-family:var(--serif-en);font-weight:800;font-size:10vw;line-height:.85;letter-spacing:-.03em;font-feature-settings:"tnum"}
+  .mid-num{font-family:var(--serif-en);font-weight:700;font-size:5.5vw;line-height:.88;letter-spacing:-.02em;font-feature-settings:"tnum"}
+  .ghost{font-family:var(--serif-en);font-weight:900;font-size:34vw;line-height:.8;opacity:.06;letter-spacing:-.04em;position:absolute;font-feature-settings:"tnum"}
+  em{font-style:italic;font-family:var(--serif-en)}
+  .en{font-family:var(--serif-en);font-style:italic;font-weight:500}
+
+  /* ============ 布局工具 ============ */
+  .col{display:flex;flex-direction:column;gap:2.4vh}
+  .row{display:flex;align-items:center;gap:3vw}
+  .grid-6{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:4vw 6vw;flex:1;align-content:center;padding:2vh 0}
+  .grid-9{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:3vh 4vw;flex:1;align-content:center}
+  .grid-4{display:grid;grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);gap:4vh 6vw;flex:1;align-content:center}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:4vw;flex:1;align-content:center}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:4vw;flex:1;align-items:center}
+  .split-55{display:grid;grid-template-columns:55fr 45fr;gap:5vw;flex:1;align-items:stretch}
+  .fill{flex:1}
+  .center{align-items:center;justify-content:center;text-align:center}
+  .bottom-left{position:absolute;left:6vw;bottom:9vh;max-width:50vw}
+  .bottom-right{position:absolute;right:6vw;bottom:9vh;max-width:50vw;text-align:right}
+  .top-right{position:absolute;right:6vw;top:6vh;text-align:right}
+
+  /* ============ Stat（数字矩阵） ============ */
+  .stat{display:flex;flex-direction:column;gap:1vh;align-items:flex-start}
+  .stat .n{font-family:var(--serif-en);font-weight:800;font-size:8vw;line-height:.88;letter-spacing:-.03em;font-feature-settings:"tnum"}
+  .stat .l{font-family:var(--sans-zh);font-size:max(13px,1.05vw);opacity:.7;margin-top:1vh;font-weight:400;line-height:1.5}
+  .stat .m{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;opacity:.5;margin-bottom:.2vh}
+
+  /* ============ Callout（引用框） ============ */
+  .callout{padding:3vh 2.4vw;border-left:3px solid currentColor;position:relative;font-family:var(--serif-zh);font-size:max(15px,1.2vw);line-height:1.55;opacity:.92}
+  .slide.light .callout{background:rgba(var(--ink-rgb),.05)}
+  .slide.dark .callout{background:rgba(var(--paper-rgb),.06)}
+  .callout .cite{display:block;margin-top:1.6vh;font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.6}
+  .callout .q-big{font-family:var(--serif-zh);font-weight:600;font-size:max(17px,1.6vw);line-height:1.42}
+
+  /* ============ Platform（平台卡） ============ */
+  .plat{display:flex;flex-direction:column;justify-content:flex-end;padding:2vh 0;border-top:1px solid currentColor;border-color:rgba(127,127,127,.35)}
+  .plat .name{font-family:var(--serif-zh);font-weight:700;font-size:1.8vw;margin-bottom:.6vh}
+  .plat .nb{font-family:var(--serif-en);font-weight:700;font-size:3.2vw;letter-spacing:-.02em;line-height:1;font-feature-settings:"tnum"}
+  .plat .sub{font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;opacity:.55;margin-top:.6vh}
+  .plat .fill{font-family:var(--sans-zh);font-weight:300;font-size:2.4vw;opacity:.28;letter-spacing:-.01em;line-height:1}
+
+  /* ============ Rowline（表格行） ============ */
+  .rowline{display:grid;grid-template-columns:1fr 2fr 1fr;gap:2vw;padding:2.2vh 0;border-top:1px solid currentColor;align-items:center;border-color:rgba(127,127,127,.25)}
+  .rowline:last-child{border-bottom:1px solid currentColor;border-color:rgba(127,127,127,.25)}
+  .rowline .k{font-family:var(--serif-zh);font-weight:700;font-size:1.7vw}
+  .rowline .v{font-family:var(--sans-zh);font-weight:400;font-size:max(14px,1.2vw);opacity:.85;line-height:1.55}
+  .rowline .m{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;opacity:.6;justify-self:end}
+
+  /* ============ Pillar（支柱卡片） ============ */
+  .pillar{display:flex;flex-direction:column;gap:1.8vh}
+  .pillar .ic{font-family:var(--serif-en);font-style:italic;font-size:2.6vw;opacity:.45;font-weight:400}
+  .pillar .ic svg{width:2.8vw;height:2.8vw;stroke-width:1.2;opacity:.7}
+  .pillar .t{font-family:var(--serif-zh);font-weight:700;font-size:2.4vw;line-height:1.1}
+  .pillar .d{font-family:var(--sans-zh);font-weight:400;font-size:max(14px,1.1vw);opacity:.76;line-height:1.6}
+
+  /* ============ Signature / Highlight ============ */
+  .sign{font-family:var(--serif-en);font-style:italic;font-weight:500;font-size:2vw;opacity:.7}
+  .hi{position:relative;display:inline}
+  .slide.dark .hi::after{content:"";position:absolute;left:-.1em;right:-.1em;bottom:-.05em;height:.28em;background:rgba(var(--paper-rgb),.15);z-index:-1}
+  .slide.light .hi::after{content:"";position:absolute;left:-.1em;right:-.1em;bottom:-.05em;height:.28em;background:rgba(var(--ink-rgb),.08);z-index:-1}
+
+  /* ============ Icons（Lucide via CDN） ============ */
+  .ico{width:1em;height:1em;display:inline-block;vertical-align:-.12em;stroke:currentColor;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .ico-lg,.ico-md,.ico-sm{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round}
+  .ico-lg{width:2.6vw;height:2.6vw;stroke-width:1.2;display:inline-block}
+  .ico-md{width:1.8vw;height:1.8vw;stroke-width:1.3;display:inline-block;vertical-align:-.4em}
+  .ico-sm{width:1.1vw;height:1.1vw;stroke-width:1.4;display:inline-block;vertical-align:-.15em;opacity:.7}
+
+  /* ============ 图片占位（虚线框，提示设计师位置） ============ */
+  .img-slot{border:1.5px dashed rgba(127,127,127,.4);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1vh;padding:2vh 2vw;font-family:var(--mono);font-size:10px;letter-spacing:.28em;text-transform:uppercase;opacity:.55;position:relative;aspect-ratio:16/9;width:100%;max-height:56vh;margin-inline:auto;box-sizing:border-box}
+  .img-slot::before{content:"";position:absolute;inset:8px;border:1px solid currentColor;opacity:.2}
+  .img-slot .plus{font-size:2vw;font-weight:300;opacity:.5;letter-spacing:0}
+  .img-slot .label{position:relative;z-index:2;text-align:center}
+  .img-slot.r-4x3{aspect-ratio:4/3}
+  .img-slot.r-3x2{aspect-ratio:3/2}
+  .img-slot.r-1x1{aspect-ratio:1/1}
+
+  /* ============ 图片实填框（关键：固定高度 + 只裁底部） ============
+     重要约束：高度用内联 height:Nvh 精确控制，不要用 aspect-ratio（会撑破布局）
+     object-position:top center 保证严禁裁剪顶部和左右，只裁剪底部
+  */
+  .frame-img{overflow:hidden;position:relative;background:rgba(0,0,0,.04);box-sizing:border-box;width:100%;border-radius:4px}
+  .slide.dark .frame-img{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.12)}
+  .frame-img > img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+  .frame-img.fit-contain > img{object-fit:contain;object-position:center center}
+  .frame-img.r-16x9{aspect-ratio:16/9;max-height:64vh}
+  .frame-img.r-16x10{aspect-ratio:16/10;max-height:56vh}
+  .frame-img.r-4x3{aspect-ratio:4/3;max-height:56vh}
+  .frame-img.r-3x2{aspect-ratio:3/2;max-height:46vh}
+  .frame-img.r-3x4{aspect-ratio:3/4;max-height:60vh}
+  .frame-img.r-1x1{aspect-ratio:1/1;max-height:50vh}
+  .frame-img.h-16{height:16vh}
+  .frame-img.h-18{height:18vh}
+  .frame-img.h-22{height:22vh}
+  .frame-img.h-26{height:26vh}
+  .frame-img.h-28{height:28vh}
+  .frame-cap{display:flex;justify-content:space-between;align-items:baseline;gap:1vw;margin-top:.8vh;font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;opacity:.72}
+  .frame-cap .pf{font-family:var(--serif-zh);font-weight:600;font-size:max(13px,1vw);letter-spacing:.04em;text-transform:none;opacity:.94}
+  .frame-cap .nb{font-family:var(--serif-en);font-style:italic;font-size:max(15px,1.2vw);letter-spacing:.02em;text-transform:none;opacity:.88}
+  .frame-cap .idx{font-family:var(--mono);opacity:.5}
+  figure.tile{display:flex;flex-direction:column;margin:0;min-width:0}
+  figure.tile > .frame-img{flex:0 0 auto}
+
+  /* ============ 导航 ============ */
+  #nav{position:fixed;left:50%;bottom:2.6vh;transform:translateX(-50%);z-index:30;display:flex;gap:10px;padding:8px 14px;border-radius:999px;background:rgba(0,0,0,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  #nav .dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);cursor:pointer;transition:all .3s ease;border:0;padding:0}
+  #nav .dot:hover{background:rgba(255,255,255,.5);transform:scale(1.15)}
+  #nav .dot.active{background:rgba(255,255,255,.95);width:22px;border-radius:999px}
+  body.light-bg #nav{background:rgba(255,255,255,.25)}
+  body.light-bg #nav .dot{background:rgba(var(--ink-rgb),.25)}
+  body.light-bg #nav .dot.active{background:rgba(var(--ink-rgb),.9)}
+  #hint{position:fixed;bottom:3vh;right:3vw;z-index:30;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.4;mix-blend-mode:difference;color:#aaa}
+  body.low-power #hint{opacity:.72;color:var(--paper);mix-blend-mode:normal}
+  body.light-bg.low-power #hint{color:var(--ink)}
+
+  /* ============================================================
+     ============ LAYOUTS API · 面向 agent 的类（v2）============
+     所有 layouts.md 中的骨架都基于下面这套命名。
+     如果你在 layouts.md 里看到某个类，它必须在下面有定义。
+     ============================================================ */
+
+  /* ---------- .frame：每页主内容容器 ---------- */
+  .frame{flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+  /* 当 .frame 同时加了 grid 类时，grid 的 display:grid 覆盖 flex */
+  .frame.grid-2-7-5,
+  .frame.grid-2-6-6,
+  .frame.grid-2-8-4,
+  .frame.grid-3-3,
+  .frame.grid-6{display:grid}
+
+  /* ---------- 标题层级（API 名称，衬线为主） ---------- */
+  .h-hero{
+    font-family:var(--serif-zh);
+    font-weight:900;
+    font-size:10vw;
+    line-height:.96;
+    letter-spacing:-.02em;
+  }
+  .h-xl{
+    font-family:var(--serif-zh);
+    font-weight:700;
+    font-size:6.2vw;
+    line-height:1.08;
+    letter-spacing:-.01em;
+  }
+  .h-sub{
+    font-family:var(--serif-zh);
+    font-weight:500;
+    font-size:3.1vw;
+    line-height:1.25;
+    letter-spacing:0;
+    opacity:.7;
+  }
+  .h-md{
+    font-family:var(--serif-zh);
+    font-weight:600;
+    font-size:2.3vw;
+    line-height:1.3;
+  }
+  /* 英文标题专用（Playfair 衬线） */
+  .h-hero-en,.h-xl-en{font-family:var(--serif-en);letter-spacing:-.025em}
+
+  /* ---------- lead 引语 ---------- */
+  .lead{
+    font-family:var(--serif-zh);
+    font-weight:400;
+    font-size:1.75vw;
+    line-height:1.5;
+    opacity:.86;
+  }
+
+  /* ---------- meta-row 底部元数据 ---------- */
+  .meta-row{
+    display:flex;
+    gap:1.2em;
+    align-items:baseline;
+    flex-wrap:wrap;
+    font-family:var(--mono);
+    font-size:max(12px,.92vw);
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    opacity:.6;
+  }
+
+  /* ---------- stat-card（数据大字报用） ---------- */
+  .stat-card{
+    display:flex;
+    flex-direction:column;
+    gap:.8vh;
+    align-items:flex-start;
+    padding-top:1.6vh;
+    border-top:1px solid currentColor;
+    border-color:rgba(127,127,127,.3);
+  }
+  .stat-card .stat-label{
+    font-family:var(--mono);
+    font-size:max(10px,.78vw);
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    opacity:.55;
+  }
+  .stat-card .stat-nb{
+    font-family:var(--serif-en);
+    font-weight:800;
+    font-size:5.8vw;
+    line-height:.9;
+    letter-spacing:-.03em;
+    font-feature-settings:"tnum";
+    margin-top:.4vh;
+  }
+  .stat-card .stat-nb .stat-unit{
+    font-family:var(--serif-zh);
+    font-weight:500;
+    font-size:.38em;
+    letter-spacing:0;
+    opacity:.72;
+    margin-left:.14em;
+  }
+  .stat-card .stat-note{
+    font-family:var(--sans-zh);
+    font-weight:400;
+    font-size:max(13px,1.05vw);
+    line-height:1.5;
+    opacity:.72;
+    margin-top:.6vh;
+  }
+  /* 当 stat-card 用于 grid-4（2x2），数字适度放大；若页面有标题+引文在上方，可内联 style 覆盖为更小值 */
+  .grid-4 .stat-card .stat-nb{font-size:5vw}
+  /* 当只有 3 个，字也可以稍大 */
+  .grid-3 .stat-card .stat-nb{font-size:6.8vw}
+
+  /* ---------- pipeline（流水线） ---------- */
+  .pipeline-section{
+    margin-top:4.4vh;
+    padding-top:2.8vh;
+    border-top:1px dashed rgba(127,127,127,.32);
+  }
+  .pipeline-section:first-of-type{
+    border-top:0;
+    padding-top:0;
+    margin-top:3vh;
+  }
+  .pipeline-label{
+    font-family:var(--mono);
+    font-size:max(11px,.85vw);
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    opacity:.62;
+    margin-bottom:2.2vh;
+  }
+  .pipeline{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:1.2vw;
+  }
+  .pipeline[data-cols="3"]{grid-template-columns:repeat(3,1fr)}
+  .pipeline[data-cols="4"]{grid-template-columns:repeat(4,1fr)}
+  .pipeline[data-cols="6"]{grid-template-columns:repeat(6,1fr)}
+  .step{
+    display:flex;
+    flex-direction:column;
+    gap:.8vh;
+    padding-top:1.4vh;
+    border-top:1px solid currentColor;
+    border-color:rgba(127,127,127,.35);
+  }
+  .step-nb{
+    font-family:var(--serif-en);
+    font-style:italic;
+    font-weight:500;
+    font-size:1.15vw;
+    opacity:.45;
+  }
+  .step-title{
+    font-family:var(--sans-zh);
+    font-weight:700;
+    font-size:1.55vw;
+    letter-spacing:.01em;
+    line-height:1.2;
+  }
+  .step-desc{
+    font-family:var(--sans-zh);
+    font-weight:400;
+    font-size:max(12px,.95vw);
+    line-height:1.45;
+    opacity:.72;
+  }
+
+  /* ---------- 网格（layouts.md 所用） ---------- */
+  /* 这些类独立挂到任何容器上都能生效，不依赖 .frame 复合选择器 */
+  .grid-2-7-5{display:grid;grid-template-columns:7fr 5fr;gap:3vw 4vh;align-items:start}
+  .grid-2-6-6{display:grid;grid-template-columns:1fr 1fr;gap:3vw 4vh;align-items:start}
+  .grid-2-8-4{display:grid;grid-template-columns:8fr 4fr;gap:3vw 4vh;align-items:start}
+  .grid-3-3{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    grid-auto-rows:minmax(0,1fr);
+    gap:2.4vh 2vw;
+  }
+  /* grid-6 已在旧样式里定义为 3x2，这里仅补 align */
+
+  /* ---------- 图片 frame-img（layouts.md 主命名） ---------- */
+  /* 在旧样式里已定义，这里补 img-cap 命名别名与增强 */
+  figure.frame-img{margin:0;display:flex;flex-direction:column;min-width:0}
+  .img-cap{
+    display:block;
+    margin-top:.8vh;
+    font-family:var(--mono);
+    font-size:max(10px,.8vw);
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    opacity:.6;
+  }
+  /* callout src 命名别名 */
+  .callout-src{
+    display:block;
+    margin-top:1.6vh;
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.2em;
+    text-transform:uppercase;
+    opacity:.6;
+  }
+
+  /* ---------- chrome & foot 补位（layouts.md 简单写法） ---------- */
+  .chrome{font-family:var(--mono);font-size:max(11px,.78vw);letter-spacing:.2em;text-transform:uppercase;opacity:.62}
+  .foot{font-family:var(--mono);font-size:max(11px,.78vw);letter-spacing:.18em;text-transform:uppercase;opacity:.5}
+
+  /* ============ 动效系统(Motion One 驱动) ============
+     所有 [data-anim] 元素默认隐藏,进入页面时由 JS 逐个揭示。
+     - cascade(默认):按 DOM 顺序 stagger 120ms 淡入 + y:16→0
+     - hero(hero 页自动):慢一点的 stagger 180ms
+     - quote(含 [data-anim="line"]):逐行 600ms 淡入
+     - directional(含 [data-anim="left|right"]):左→分隔线→右
+     - pipeline(data-animate="pipeline"):Space/→ 手动推进
+     Motion One 没加载成功时(CDN 断 + 本地丢),所有 [data-anim] 会兜底显示。
+  */
+  [data-anim]{opacity:1}
+  body.motion-ready [data-anim]{opacity:0}
+  body.motion-ready [data-anim="left"]{transform:translateX(-24px)}
+  body.motion-ready [data-anim="right"]{transform:translateX(24px)}
+  body.motion-ready [data-anim="line"]{opacity:0;transform:translateY(10px)}
+  body.motion-ready [data-animate="pipeline"] [data-anim]{opacity:.15}
+  body.low-power #deck{transition:none!important}
+  body.low-power *,
+  body.low-power *::before,
+  body.low-power *::after{animation:none!important;transition:none!important}
+  body.low-power.motion-ready [data-anim],
+  body.low-power [data-anim]{opacity:1!important;transform:none!important}
+
+  /* ---------- 响应式降级 ---------- */
+  @media (max-width:900px){
+    .display{font-size:16vw}
+    .display-zh{font-size:12vw}
+    .h1-zh{font-size:7vw}
+    .h-hero{font-size:14vw}
+    .h-xl{font-size:9vw}
+    .pipeline{grid-template-columns:repeat(2,1fr)}
+    .grid-2-7-5,.grid-2-6-6,.grid-2-8-4{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<script>
+  (function(){
+    const KEY = 'guizang-ppt-low-power';
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const stored = localStorage.getItem(KEY);
+    window.__lowPowerMode = stored === '1' || (stored === null && reduced);
+    function updateHint(){
+      const hint = document.getElementById('hint');
+      if(hint) hint.textContent = `← → 翻页 · B ${window.__lowPowerMode ? '动态' : '静态'} · ESC 索引`;
+    }
+    window.__setLowPowerMode = function(on, opts={}){
+      window.__lowPowerMode = !!on;
+      document.body.classList.toggle('low-power', window.__lowPowerMode);
+      if(opts.persist !== false) localStorage.setItem(KEY, window.__lowPowerMode ? '1' : '0');
+      if(window.__lowPowerMode && document.getAnimations){
+        document.getAnimations().forEach(a=>a.cancel());
+      }
+      updateHint();
+      dispatchEvent(new CustomEvent('ppt-low-power-change', {detail:{on:window.__lowPowerMode}}));
+      if(window.__playSlide) window.__playSlide(window.__currentSlideIndex || 0);
+    };
+    document.body.classList.toggle('low-power', window.__lowPowerMode);
+    addEventListener('DOMContentLoaded', updateHint, {once:true});
+  })();
+</script>
+
+<canvas id="bg-dark" class="bg"></canvas>
+<canvas id="bg-light" class="bg"></canvas>
+<div id="hint">← → 翻页 · B 静态 · ESC 索引</div>
+
+<div id="deck">
+
+<!-- ============================================================
+     SLIDES 插入区 · 在此处填充所有 <section class="slide ..."> 页面
+     每页模板参考 references/page-patterns.md
+     页面组件参考 references/components.md
+     ============================================================ -->
+
+<section class="slide hero dark">
+  <div class="chrome"><div>iCare 医防融合协同平台</div><div>AI慢病管理体系</div></div>
+  <div class="frame" style="display:grid; gap:4vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>iCare 医防融合协同平台</div>
+    <h1 class="h-hero" data-anim>AI慢病管理体系</h1>
+    <h2 class="h-sub" data-anim>以患者为中心的全周期慢病管理</h2>
+    <p class="lead" style="max-width:58vw" data-anim>AI驱动的诊前、诊中、诊后及院外全链条智能辅助决策系统</p>
+    <div class="meta-row" data-anim><span>杭州富阳区试点</span><span>·</span><span>高血压与糖尿病</span></div>
+  </div>
+  <div class="foot"><div>iCare 医防融合协同平台 · AI慢病管理体系</div><div>— 01 —</div></div>
+</section>
+
+<section class="slide hero light">
+  <div class="chrome"><div>Act I · 体系流程</div><div>幕封</div></div>
+  <div class="frame" style="display:grid; gap:5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Act I</div>
+    <h1 class="h-hero" style="font-size:8.5vw" data-anim>体系流程</h1>
+    <p class="lead" style="max-width:62vw" data-anim>多源数据接入 → 统一数据底座 → AI预测与生成 → 临床功能输出 → 三端应用 → 反馈迭代</p>
+  </div>
+  <div class="foot"><div>幕封 · 一 · 体系流程</div><div>— · —</div></div>
+</section>
+
+<section class="slide light">
+  <div class="chrome"><div>体系概述 · Overview</div><div>03</div></div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>iCare 医防融合协同平台</div>
+    <h2 class="h-xl" data-anim>AI驱动的全疾病周期慢病管理系统</h2>
+    <p class="lead" style="margin-bottom:3vh" data-anim>以患者为中心，对其所患的全部慢病进行统一路径化管理</p>
+    <div class="grid-4" data-anim>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Data Ingestion</div>
+        <div class="stat-nb" style="font-size:3.2vw">多源数据接入</div>
+        <div class="stat-note">社服系统、HIS、LIS、公卫系统等多源异构数据统一接入与标准化</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Data & AI</div>
+        <div class="stat-nb" style="font-size:3.2vw">数据底座与AI</div>
+        <div class="stat-note">三表式数据库 + 五类预测模型 + 大语言模型处方生成</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Functions</div>
+        <div class="stat-nb" style="font-size:3.2vw">功能输出层</div>
+        <div class="stat-note">风险评估报告、指标趋势可视化、结构化健康处方等临床功能</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Applications</div>
+        <div class="stat-nb" style="font-size:3.2vw">三端应用</div>
+        <div class="stat-note">医生端、患者端、管理端协同，覆盖诊前诊中诊后全流程</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>体系概述 · AI驱动的全疾病周期慢病管理系统</div><div>System Overview</div></div>
+</section>
+
+<section class="slide dark">
+  <div class="chrome"><div>架构 · Architecture</div><div>04</div></div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>Architecture · 五层架构</div>
+    <h2 class="h-xl" data-anim>从数据到应用的完整链路</h2>
+    <div class="pipeline-section" style="margin-top:4vh">
+      <div class="pipeline-label" data-anim>Five-Layer Architecture · 五层架构</div>
+      <div class="pipeline" data-cols="5">
+        <div class="step" data-anim><div class="step-nb">01</div><div class="step-title">数据接入层</div><div class="step-desc">多源异构数据统一接入、清洗、标准化与身份匹配</div></div>
+        <div class="step" data-anim><div class="step-nb">02</div><div class="step-title">数据底座与AI层</div><div class="step-desc">三表式数据库 + 预测模型 + 大语言模型生成</div></div>
+        <div class="step" data-anim><div class="step-nb">03</div><div class="step-title">功能输出层</div><div class="step-desc">风险评估、趋势分析、处方生成、预警推送</div></div>
+        <div class="step" data-anim><div class="step-nb">04</div><div class="step-title">应用端</div><div class="step-desc">医生工作站、患者端、管理后台三端协同</div></div>
+        <div class="step" data-anim><div class="step-nb">05</div><div class="step-title">反馈迭代层</div><div class="step-desc">结局数据回流，持续优化模型与临床路径</div></div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:3vh" data-anim>AI的作用贯穿各环节——"未病先防、既病防变"，从被动响应转向主动干预。</div>
+  </div>
+  <div class="foot"><div>五层架构 · 数据接入 → 数据底座与AI → 功能输出 → 应用端 → 反馈迭代</div><div>Architecture</div></div>
+</section>
+
+<section class="slide light">
+  <div class="chrome"><div>AI · 全周期渗透</div><div>05</div></div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>AI · 全周期渗透</div>
+    <h2 class="h-xl" data-anim>从"按时间触发"到"按风险触发"</h2>
+    <div class="grid-3" style="margin-top:4vh">
+      <div data-anim style="padding:2.8vh 2vw; border-top:2px solid currentColor">
+        <div style="font-family:var(--serif-en); font-style:italic; font-weight:500; font-size:1.4vw; opacity:.45; margin-bottom:1.6vh">Point 01</div>
+        <div style="font-family:var(--serif-zh); font-weight:700; font-size:1.7vw; line-height:1.25; margin-bottom:1.4vh">管理窗口前移</div>
+        <div style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.6; opacity:.82">未病先防、既病防变，将慢病管理的介入时机从发病后前移至风险发生前，实现真正的预防式管理。</div>
+      </div>
+      <div data-anim style="padding:2.8vh 2vw; border-top:2px solid currentColor">
+        <div style="font-family:var(--serif-en); font-style:italic; font-weight:500; font-size:1.4vw; opacity:.45; margin-bottom:1.6vh">Point 02</div>
+        <div style="font-family:var(--serif-zh); font-weight:700; font-size:1.7vw; line-height:1.25; margin-bottom:1.4vh">因人而异</div>
+        <div style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.6; opacity:.82">随访和检查从统一模板变为个性化方案，基于患者风险分层与疾病特征动态调整管理策略。</div>
+      </div>
+      <div data-anim style="padding:2.8vh 2vw; border-top:2px solid currentColor">
+        <div style="font-family:var(--serif-en); font-style:italic; font-weight:500; font-size:1.4vw; opacity:.45; margin-bottom:1.6vh">Point 03</div>
+        <div style="font-family:var(--serif-zh); font-weight:700; font-size:1.7vw; line-height:1.25; margin-bottom:1.4vh">人机协同</div>
+        <div style="font-family:var(--sans-zh); font-size:max(13px,1.05vw); line-height:1.6; opacity:.82">慢病管理质量从医生主导走向AI辅助，AI提供决策支持，医生保留最终判断权，实现效率与安全兼顾。</div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:3vh" data-anim>支持病种：高血压 · 糖尿病 · COPD · CKD · 脑卒中 · 冠心病 — 面向多种慢病共享患者的全周期管理。</div>
+  </div>
+  <div class="foot"><div>AI全周期渗透 · 从"按时间触发"到"按风险触发"</div><div>AI Transformation</div></div>
+</section>
+
+<section class="slide hero dark">
+  <div class="chrome"><div>Act II · 数据底座与AI能力</div><div>幕封</div></div>
+  <div class="frame" style="display:grid; gap:5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Act II</div>
+    <h1 class="h-hero" style="font-size:6.5vw" data-anim>数据底座与AI能力</h1>
+    <p class="lead" style="max-width:62vw" data-anim>三表式数据库 + 五类预测模型 + 大语言模型处方生成</p>
+  </div>
+  <div class="foot"><div>幕封 · 二 · 数据底座与AI能力</div><div>— · —</div></div>
+</section>
+
+<section class="slide light">
+  <div class="chrome"><div>数据底座 · Data Foundation</div><div>07</div></div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>Data Foundation · 数据底座</div>
+    <h2 class="h-xl" data-anim>三表式数据库</h2>
+    <div class="grid-3" style="margin-top:4vh">
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Table 01</div>
+        <div class="stat-nb" style="font-size:2.4vw">患者主索引表</div>
+        <div class="stat-note">全库患者身份识别和跨机构数据关联，为模型训练提供唯一患者身份锚点，确保跨源数据可关联归集。</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Table 02</div>
+        <div class="stat-nb" style="font-size:2.4vw">随访队列表</div>
+        <div class="stat-note">动态管理患者随访窗口，记录随访期间持续产生管理记录的患者，明确适用于风险预测和预警算法的人群范围。</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Table 03</div>
+        <div class="stat-nb" style="font-size:2.4vw">终点事件队列表</div>
+        <div class="stat-note">明确患者结局状态，为模型训练提供清晰、可追溯的标签定义，界定死亡、并发症、疾病进展等终点事件。</div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:3vh" data-anim>以患者为中心、覆盖从建档到结局的全周期健康数据视图，为AI训练提供高质量结构化样本。</div>
+  </div>
+  <div class="foot"><div>数据底座 · 三表式数据库：主索引 → 随访队列 → 终点事件</div><div>Data Foundation</div></div>
+</section>
+
+<section class="slide dark">
+  <div class="chrome"><div>预测类AI · Prediction</div><div>08</div></div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>Prediction · 五类预测模型</div>
+    <h2 class="h-xl" data-anim>面向多种慢病共享患者的全周期数据</h2>
+    <p class="lead" style="margin-bottom:2vh" data-anim>基于事件—特征变化驱动分桶与离散时间生存模型</p>
+    <div style="display:flex; flex-direction:column; gap:0; margin-top:2vh">
+      <div class="rowline" data-anim><div class="k" style="font-family:var(--serif-en); font-style:italic">01</div><div class="v">就诊激活预测</div><div class="m">Activation</div></div>
+      <div class="rowline" data-anim><div class="k" style="font-family:var(--serif-en); font-style:italic">02</div><div class="v">转诊风险预测</div><div class="m">Referral</div></div>
+      <div class="rowline" data-anim><div class="k" style="font-family:var(--serif-en); font-style:italic">03</div><div class="v">疾病进展预测</div><div class="m">Progression</div></div>
+      <div class="rowline" data-anim><div class="k" style="font-family:var(--serif-en); font-style:italic">04</div><div class="v">并发症预测</div><div class="m">Complication</div></div>
+      <div class="rowline" data-anim><div class="k" style="font-family:var(--serif-en); font-style:italic">05</div><div class="v">预后与转归预测</div><div class="m">Prognosis</div></div>
+    </div>
+    <div class="callout" style="margin-top:3vh" data-anim>五类模型统一以患者全周期数据为输入，各自面向不同临床决策节点，输出风险分层结果，嵌入医生工作流。</div>
+  </div>
+  <div class="foot"><div>预测类AI · 五类预测模型：就诊激活 → 转诊风险 → 疾病进展 → 并发症 → 预后转归</div><div>Prediction Models</div></div>
+</section>
+
+<section class="slide light">
+  <div class="chrome"><div>生成类AI · Generation</div><div>09</div></div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>Generation · 处方生成</div>
+    <h2 class="h-xl" data-anim>结构化健康处方</h2>
+    <div class="split" style="margin-top:3vh">
+      <div data-anim style="display:flex; flex-direction:column; gap:2vh">
+        <p class="body-zh" style="font-size:max(16px,1.3vw)">大语言模型将预测结果与患者全周期数据结合，生成包含以下内容的结构化健康处方：</p>
+        <div style="display:flex; flex-direction:column; gap:1.2vh; padding-left:1.2em">
+          <div style="padding:1.2vh 1.2vw; border-left:2px solid currentColor; font-family:var(--sans-zh); font-size:max(13px,1vw); opacity:.82; line-height:1.5">风险评估报告：患者当前风险等级与关键影响因素</div>
+          <div style="padding:1.2vh 1.2vw; border-left:2px solid currentColor; font-family:var(--sans-zh); font-size:max(13px,1vw); opacity:.82; line-height:1.5">指标趋势可视化：关键生理指标的历史变化轨迹</div>
+          <div style="padding:1.2vh 1.2vw; border-left:2px solid currentColor; font-family:var(--sans-zh); font-size:max(13px,1vw); opacity:.82; line-height:1.5">病情摘要：从全周期数据中提炼的核心临床信息</div>
+          <div style="padding:1.2vh 1.2vw; border-left:2px solid currentColor; font-family:var(--sans-zh); font-size:max(13px,1vw); opacity:.82; line-height:1.5">生活化建议：用药、饮食、运动等个性化干预方案</div>
+        </div>
+      </div>
+      <div class="callout" data-anim>
+        <div class="q-big">所有AI输出不直接暴露模型分数，以任务清单、风险名单、处方文本等形式嵌入前端工作流。</div>
+        <div class="cite">AI Output Design Principle</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>生成类AI · 结构化健康处方：风险报告 + 趋势可视化 + 病情摘要 + 生活化建议</div><div>Prescription Generation</div></div>
+</section>
+
+<section class="slide hero light">
+  <div class="chrome"><div>Act III · 高危人群识别与主动纳入</div><div>幕封</div></div>
+  <div class="frame" style="display:grid; gap:4vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Act III</div>
+    <h1 class="h-hero" style="font-size:7vw" data-anim>高危人群识别</h1>
+    <h2 class="h-sub" data-anim>与主动纳入</h2>
+    <p class="lead" style="max-width:62vw" data-anim>AI提前识别高风险者，在其发病前即纳入管理——这是全周期管理的起点</p>
+  </div>
+  <div class="foot"><div>幕封 · 三 · 高危人群识别与主动纳入</div><div>— · —</div></div>
+</section>
+<!-- ===== Slide 11: 高危人群 - 问题与方案 ===== -->
+<section class="slide dark">
+  <div class="chrome">
+    <span class="kicker" data-anim>Problem &amp; Solution</span>
+  </div>
+  <div class="frame">
+    <h2 class="h-xl" data-anim>解决了什么问题 &middot; 做了什么</h2>
+    <div class="grid-2-6-6" data-anim>
+      <div style="border-left: 3px solid var(--accent); padding-left: 2rem;">
+        <h3 class="h-md" data-anim>解决了什么问题</h3>
+        <p class="body-zh" data-anim>基层缺乏对未确诊高危居民的系统性识别手段。高危人群散落在社区中，没有机制将他们纳入管理视野。</p>
+      </div>
+      <div>
+        <h3 class="h-md" data-anim>做了什么</h3>
+        <p class="body-zh" data-anim>系统后台周期性运行发病风险预测模型，对数据库中全人群进行扫描，同时评估多种慢病的发病风险，输出多病种高危发病名单并推送至当地基层医生。</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot">
+    <span data-anim>AI 慢性病管理体系</span>
+  </div>
+</section>
+
+<!-- ===== Slide 12: 高危人群管理闭环 ===== -->
+<section class="slide light">
+  <div class="chrome">
+    <span class="kicker" data-anim>Closed Loop &middot; 管理闭环</span>
+  </div>
+  <div class="frame">
+    <h2 class="h-xl" data-anim>从识别到签约的完整链路</h2>
+    <div data-anim>
+      <div class="rowline">
+        <span class="k" data-anim>风险名单</span>
+        <span class="v" data-anim>AI 扫描全人群，输出高危发病名单</span>
+        <span class="m" data-anim>01</span>
+      </div>
+      <div class="rowline">
+        <span class="k" data-anim>签约建议</span>
+        <span class="v" data-anim>推送至基层医生，推动签约管理</span>
+        <span class="m" data-anim>02</span>
+      </div>
+      <div class="rowline">
+        <span class="k" data-anim>筛查方案</span>
+        <span class="v" data-anim>自动生成个性化疾病筛查方案（覆盖多种目标慢病）</span>
+        <span class="m" data-anim>03</span>
+      </div>
+    </div>
+    <div class="callout" data-anim>
+      <p class="callout-src">高危人群一旦进入管理，后续所有随访、检查、处方功能即可围绕其展开——这是全周期管理的起点。</p>
+    </div>
+  </div>
+  <div class="foot">
+    <span data-anim>AI 慢性病管理体系</span>
+  </div>
+</section>
+
+<!-- ===== Slide 13: 幕封 · 四 ===== -->
+<section class="slide hero dark">
+  <div class="chrome">
+    <span class="kicker" data-anim>Act IV</span>
+  </div>
+  <div class="frame center fill">
+    <h1 class="h-hero" data-anim>诊前</h1>
+    <p class="h-sub" data-anim>临期提醒与患者召回</p>
+    <p class="lead" data-anim>远程召回 + 到院采集 = 医生面诊时已有结构化信息在手</p>
+  </div>
+  <div class="foot">
+    <span data-anim>AI 慢性病管理体系</span>
+  </div>
+</section>
+
+<!-- ===== Slide 14: 诊前概述 ===== -->
+<section class="slide light">
+  <div class="chrome">
+    <span class="kicker" data-anim>Pre-Consultation &middot; 诊前</span>
+  </div>
+  <div class="frame">
+    <h2 class="h-xl" data-anim>两个环节 &middot; 一个目标</h2>
+    <div class="grid-2-6-6" data-anim>
+      <div class="stat-card">
+        <span class="stat-label" data-anim>环节一</span>
+        <span class="stat-note" data-anim>远程将应随访的患者召回</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label" data-anim>环节二</span>
+        <span class="stat-note" data-anim>患者到院后、见医生前完成病情问询、体征采集和生活方式问询</span>
+      </div>
+    </div>
+    <div class="callout" data-anim>
+      <p class="callout-src">通过医护配合的方式，完善健康管理的重要因素，提高随访真实性</p>
+    </div>
+  </div>
+  <div class="foot">
+    <span data-anim>AI 慢性病管理体系</span>
+  </div>
+</section>
+
+<!-- ===== Slide 15: 临期提醒与召回 ===== -->
+<section class="slide dark">
+  <div class="chrome">
+    <span class="kicker" data-anim>Recall System &middot; 召回系统</span>
+  </div>
+  <div class="frame">
+    <h2 class="h-xl" data-anim>三级状态 &middot; 四级下钻</h2>
+    <div class="grid-3" data-anim>
+      <div class="stat-card">
+        <span class="stat-label" data-anim>超期</span>
+        <span class="stat-note" data-anim>已逾期未随访，优先处理</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label" data-anim>临期</span>
+        <span class="stat-note" data-anim>即将到期，按期召回</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label" data-anim>正常</span>
+        <span class="stat-note" data-anim>管理规范，持续跟踪</span>
+      </div>
+    </div>
+    <div class="callout" data-anim>
+      <p class="callout-src">按风险触发，而非按时间触发。常规临期患者和高风险待激活患者在同一面板合并管理。</p>
+    </div>
+  </div>
+  <div class="foot">
+    <span data-anim>AI 慢性病管理体系</span>
+  </div>
+</section>
+
+<!-- ===== Slide 16: 诊前问询与采集 ===== -->
+<section class="slide light">
+  <div class="chrome">
+    <span class="kicker" data-anim>Pre-Consultation &middot; 采集</span>
+  </div>
+  <div class="frame">
+    <h2 class="h-xl" data-anim>医护配合的结构化采集</h2>
+    <div class="grid-3" data-anim>
+      <div class="pillar">
+        <span class="t" data-anim>病情问询</span>
+        <span class="d" data-anim>症状变化、用药情况</span>
+      </div>
+      <div class="pillar">
+        <span class="t" data-anim>体征采集</span>
+        <span class="d" data-anim>血压、血糖、心率、腰围</span>
+      </div>
+      <div class="pillar">
+        <span class="t" data-anim>生活方式问询</span>
+        <span class="d" data-anim>饮食、运动、吸烟饮酒</span>
+      </div>
+    </div>
+    <div class="callout" data-anim>
+      <p class="callout-src">采集结果结构化存储并自动写入患者本次就诊记录，医生面诊时直接基于已有信息进行判断。</p>
+    </div>
+  </div>
+  <div class="foot">
+    <span data-anim>AI 慢性病管理体系</span>
+  </div>
+</section>
+
+<!-- ===== Slide 17: 幕封 · 五 ===== -->
+<section class="slide hero light">
+  <div class="chrome">
+    <span class="kicker" data-anim>Act V</span>
+  </div>
+  <div class="frame center fill">
+    <h1 class="h-hero" data-anim>诊中</h1>
+    <p class="h-sub" data-anim>检验检查建议</p>
+    <p class="lead" data-anim>系统已完成预判和勾选——医生只需确认</p>
+  </div>
+  <div class="foot">
+    <span data-anim>AI 慢性病管理体系</span>
+  </div>
+</section>
+
+<!-- ===== Slide 18: 检验检查建议 ===== -->
+<section class="slide dark">
+  <div class="chrome">
+    <span class="kicker" data-anim>Exam Suggestions &middot; 检验检查</span>
+  </div>
+  <div class="frame">
+    <h2 class="h-xl" data-anim>跨机构去重 &middot; 以患者为中心</h2>
+    <div data-anim>
+      <div class="rowline">
+        <span class="k" data-anim>跨机构去重</span>
+        <span class="v" data-anim>近期已完成的检查自动识别并取消勾选</span>
+        <span class="m" data-anim>01</span>
+      </div>
+      <div class="rowline">
+        <span class="k" data-anim>风险驱动</span>
+        <span class="v" data-anim>低风险按标准周期，高风险自动加频加密</span>
+        <span class="m" data-anim>02</span>
+      </div>
+      <div class="rowline">
+        <span class="k" data-anim>医生可调整</span>
+        <span class="v" data-anim>手动修改勾选项</span>
+        <span class="m" data-anim>03</span>
+      </div>
+      <div class="rowline">
+        <span class="k" data-anim>自动同步</span>
+        <span class="v" data-anim>建议自动同步至健康处方页面</span>
+        <span class="m" data-anim>04</span>
+      </div>
+    </div>
+    <div class="callout" data-anim>
+      <p class="callout-src">跨机构检查记录覆盖得越广，去重越准，重复检查越少——这是检验检查建议准确性的核心壁垒。</p>
+    </div>
+  </div>
+  <div class="foot">
+    <span data-anim>AI 慢性病管理体系</span>
+  </div>
+</section>
+
+<!-- ===== Slide 19: 幕封 · 六 ===== -->
+<section class="slide hero dark">
+  <div class="chrome">
+    <span class="kicker" data-anim>Act VI</span>
+  </div>
+  <div class="frame center fill">
+    <h1 class="h-hero" data-anim>诊中</h1>
+    <p class="h-sub" data-anim>随访计划动态生成</p>
+    <p class="lead" data-anim>不是在固定时间点"例行检查"，而是在风险出现时"即时响应"</p>
+  </div>
+  <div class="foot">
+    <span data-anim>AI 慢性病管理体系</span>
+  </div>
+</section>
+<!-- 20 · 传统随访的问题 -->
+<section class="slide light">
+  <div class="chrome"><div>Problem · 传统随访</div><div>20 / 29</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Problem · 传统随访</div>
+    <h2 class="h-xl" data-anim>三大核心问题</h2>
+    <div class="grid-3" style="margin-top:4vh">
+      <div data-anim style="padding:2.4vh 1.6vw; border-top:2px solid currentColor">
+        <div class="stat-label" style="margin-bottom:1.4vh">问题一</div>
+        <h3 class="h-md" style="margin-bottom:1.6vh; font-size:1.7vw">标准化模板</h3>
+        <p class="body-zh" style="font-size:max(13px,1.05vw); line-height:1.6">"高危每月一次、低危每三个月一次" -- 分级依据人群统计规则，而非患者当前具体病情。</p>
+      </div>
+      <div data-anim style="padding:2.4vh 1.6vw; border-top:2px solid currentColor">
+        <div class="stat-label" style="margin-bottom:1.4vh">问题二</div>
+        <h3 class="h-md" style="margin-bottom:1.6vh; font-size:1.7vw">事后模式</h3>
+        <p class="body-zh" style="font-size:max(13px,1.05vw); line-height:1.6">患者病情进展已经发生，才能在下一次定期随访中被发现和响应 -- 此时干预窗口已经错过。</p>
+      </div>
+      <div data-anim style="padding:2.4vh 1.6vw; border-top:2px solid currentColor">
+        <div class="stat-label" style="margin-bottom:1.4vh">问题三</div>
+        <h3 class="h-md" style="margin-bottom:1.6vh; font-size:1.7vw">定期不等于及时</h3>
+        <p class="body-zh" style="font-size:max(13px,1.05vw); line-height:1.6">真正有价值的是在进展发生之前就调整管理强度，而非等待下一次固定随访日期。</p>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:3vh" data-anim>
+      <div class="q-big">一个血糖控制良好但血脂恶化的患者和一个肾功能已下降的患者，可能在模板中同属一个等级、套用同一套随访方案。</div>
+    </div>
+  </div>
+  <div class="foot"><div>传统随访 · 标准化模板 + 事后模式 + 定期不等于及时</div><div>Traditional Follow-up Problems</div></div>
+</section>
+
+<!-- 21 · AI驱动的动态随访 -->
+<section class="slide dark">
+  <div class="chrome"><div>Solution · AI动态随访</div><div>21 / 29</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Solution · AI动态随访</div>
+    <h2 class="h-xl" data-anim>即时响应 · 干预力度与风险对等</h2>
+    <div style="display:flex; flex-direction:column; gap:2.2vh; margin-top:4vh">
+      <div class="rowline" data-anim><div class="k">01</div><div class="v">缩短随访间隔、加密检查项目</div><div class="m">动态调整</div></div>
+      <div class="rowline" data-anim><div class="k">02</div><div class="v">达到转诊标准时触发转诊建议</div><div class="m">及时转诊</div></div>
+      <div class="rowline" data-anim><div class="k">03</div><div class="v">健康处方建议详略程度自动升级</div><div class="m">内容升级</div></div>
+      <div class="rowline" data-anim><div class="k">04</div><div class="v">出现并发症风险时自动匹配专病管理路径</div><div class="m">路径匹配</div></div>
+    </div>
+    <div class="callout" style="margin-top:3vh" data-anim>每次新数据进入，风险评分重新计算，计划随之刷新。资源与注意力集中在最需要的地方。</div>
+  </div>
+  <div class="foot"><div>AI动态随访 · 即时响应 + 风险对等干预 + 资源聚焦</div><div>AI Dynamic Follow-up</div></div>
+</section>
+
+<!-- 22 · 幕封 · 七 -->
+<section class="slide hero light">
+  <div class="chrome"><div>第七章 · 诊中</div><div>22 / 29</div></div>
+  <div class="frame" style="display:grid; gap:5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Act VII</div>
+    <h1 class="h-hero" style="font-size:10vw" data-anim>诊中</h1>
+    <h2 class="h-sub" data-anim>健康处方</h2>
+    <p class="lead" style="max-width:62vw" data-anim>不是一张药品处方，而是包含风险评估、指标趋势、病情摘要和生活方式建议的结构化健康处方</p>
+  </div>
+  <div class="foot"><div>第七章 · 诊中 -- 健康处方</div><div>-- · --</div></div>
+</section>
+
+<!-- 23 · 健康处方 - 三大问题 -->
+<section class="slide dark">
+  <div class="chrome"><div>Problem · 传统处方的局限</div><div>23 / 29</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Problem · 传统处方的局限</div>
+    <h2 class="h-xl" data-anim>三个问题</h2>
+    <div class="grid-3" style="margin-top:4vh">
+      <div class="stat-card" data-anim>
+        <div class="stat-label">问题一</div>
+        <div class="stat-nb" style="font-size:3.2vw; font-family:var(--serif-zh); font-weight:700">个体针对性弱</div>
+        <div class="stat-note">统一模板对任何具体患者都不够精准。每个患者病情组合、风险因素、生活方式各不相同，模板化处方无法覆盖个体差异。</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">问题二</div>
+        <div class="stat-nb" style="font-size:3.2vw; font-family:var(--serif-zh); font-weight:700">患者执行难</div>
+        <div class="stat-note">"每日蛋白质60克" -- 患者无法转化为日常行为。"低盐饮食"、"适量运动"这类建议缺乏可操作的量化标准。</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">问题三</div>
+        <div class="stat-nb" style="font-size:3.2vw; font-family:var(--serif-zh); font-weight:700">指导不接地气</div>
+        <div class="stat-note">没有结合当地饮食文化、季节气候特征。同样的建议在北方和南方、夏季和冬季的执行效果截然不同。</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>传统处方的局限 · 个体针对性弱 + 患者执行难 + 指导不接地气</div><div>Prescription Problems</div></div>
+</section>
+
+<!-- 24 · 解决方案 2.1+2.2 -->
+<section class="slide light">
+  <div class="chrome"><div>Solution · 个体化与可操作</div><div>24 / 29</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Solution · 个体化与可操作</div>
+    <h2 class="h-xl" data-anim style="font-size:5vw">个体化与可操作</h2>
+    <div class="grid-2-6-6" style="margin-top:3vh">
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">2.1 解决个体针对性弱</h3>
+        <p class="body-zh" style="font-size:max(14px,1.1vw); line-height:1.65">基于患者全部慢病和实际异常指标驱动处方内容生成。eGFR下降则肾脏危险信号排首位；尿酸偏高则饮水和低嘌呤内容强化。</p>
+        <div class="callout" style="margin-top:2.5vh; font-size:max(14px,1.1vw)">一份处方体现的是这个患者此刻的综合风险画像。</div>
+      </div>
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">2.2 解决患者执行难</h3>
+        <p class="body-zh" style="font-size:max(14px,1.1vw); line-height:1.65">建议全部翻译为患者可直接操作的具体行为。</p>
+        <div style="margin-top:2vh; display:flex; flex-direction:column; gap:1.6vh">
+          <div style="padding:1.4vh 1.2vw; border-left:2px solid currentColor"><span style="font-family:var(--serif-zh); font-weight:600">蛋白质：</span>"1个鸡蛋 + 1杯牛奶 + 2.5两瘦肉 + 1块豆腐"</div>
+          <div style="padding:1.4vh 1.2vw; border-left:2px solid currentColor"><span style="font-family:var(--serif-zh); font-weight:600">运动强度：</span>"能说话不能唱歌 = 刚好"</div>
+          <div style="padding:1.4vh 1.2vw; border-left:2px solid currentColor"><span style="font-family:var(--serif-zh); font-weight:600">盐摄入：</span>"盐不超过5克/天，约等于1啤酒瓶盖"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>2.1 + 2.2 · 个体化驱动 + 可操作翻译</div><div>Personalization & Actionability</div></div>
+</section>
+
+<!-- 25 · 解决方案 2.3+2.4 -->
+<section class="slide dark">
+  <div class="chrome"><div>Solution · 接地气与结构化</div><div>25 / 29</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Solution · 接地气与结构化</div>
+    <h2 class="h-xl" data-anim style="font-size:5vw">接地气与结构化</h2>
+    <div class="grid-2-6-6" style="margin-top:3vh">
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">2.3 解决指导不接地气</h3>
+        <p class="body-zh" style="font-size:max(14px,1.1vw); line-height:1.65; margin-bottom:1.8vh">每项建议自动融入患者历史健康数据、当地饮食文化、季节气候特征。</p>
+        <div style="display:flex; flex-direction:column; gap:1.4vh">
+          <div style="padding:1.2vh 1vw; border:1px solid rgba(127,127,127,.25)">
+            <span style="font-family:var(--serif-zh); font-weight:600">杭州示例：</span>"吃片儿川/拌川面条减半，多配蔬菜"
+          </div>
+          <div style="padding:1.2vh 1vw; border:1px solid rgba(127,127,127,.25)">
+            <span style="font-family:var(--serif-zh); font-weight:600">季节示例：</span>"5月梅雨季，建议室内开空调除湿后运动"
+          </div>
+        </div>
+      </div>
+      <div data-anim>
+        <h3 class="h-md" style="margin-bottom:2vh">2.4 处方六部分结构</h3>
+        <div style="display:flex; flex-direction:column; gap:1.2vh">
+          <div style="padding:1vh 1vw; border-left:2px solid currentColor"><span class="body-zh" style="font-size:max(13px,1.05vw)">体重管理目标</span></div>
+          <div style="padding:1vh 1vw; border-left:2px solid currentColor"><span class="body-zh" style="font-size:max(13px,1.05vw)">饮食指导</span></div>
+          <div style="padding:1vh 1vw; border-left:2px solid currentColor"><span class="body-zh" style="font-size:max(13px,1.05vw)">运动指导</span></div>
+          <div style="padding:1vh 1vw; border-left:2px solid currentColor"><span class="body-zh" style="font-size:max(13px,1.05vw)">危险信号清单</span></div>
+          <div style="padding:1vh 1vw; border-left:2px solid currentColor"><span class="body-zh" style="font-size:max(13px,1.05vw)">自我健康管理</span></div>
+          <div style="padding:1vh 1vw; border-left:2px solid currentColor"><span class="body-zh" style="font-size:max(13px,1.05vw)">短信浓缩版</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>2.3 + 2.4 · 接地气指导 + 六部分结构</div><div>Localization & Structure</div></div>
+</section>
+
+<!-- 26 · 处方结构详解 -->
+<section class="slide light">
+  <div class="chrome"><div>Prescription Structure · 处方结构</div><div>26 / 29</div></div>
+  <div class="frame" style="padding-top:4vh">
+    <div class="kicker" data-anim>Prescription Structure · 处方结构</div>
+    <h2 class="h-xl" data-anim style="font-size:4.8vw">六部分 · 一份处方</h2>
+    <div class="grid-3-3" style="margin-top:2.5vh">
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Part 01</div>
+        <div class="stat-nb" style="font-size:1.8vw; font-family:var(--serif-zh); font-weight:600">体重管理目标</div>
+        <div class="stat-note">量化减重目标和逐月分解计划。基于BMI、腰围、体脂率等多项指标综合设定。</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Part 02</div>
+        <div class="stat-nb" style="font-size:1.8vw; font-family:var(--serif-zh); font-weight:600">饮食指导</div>
+        <div class="stat-note">按主食、蛋白质、盐、饮水逐一给出定量建议，融入当地饮食文化。</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Part 03</div>
+        <div class="stat-nb" style="font-size:1.8vw; font-family:var(--serif-zh); font-weight:600">运动指导</div>
+        <div class="stat-note">渐进式运动计划 + 疾病专项训练。从低强度开始，逐步增加时长与频率。</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Part 04</div>
+        <div class="stat-nb" style="font-size:1.8vw; font-family:var(--serif-zh); font-weight:600">危险信号清单</div>
+        <div class="stat-note">按器官系统逐一列出需立即就医的量化阈值，如血压、血糖、肌酐等关键指标警戒线。</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Part 05</div>
+        <div class="stat-nb" style="font-size:1.8vw; font-family:var(--serif-zh); font-weight:600">自我健康管理</div>
+        <div class="stat-note">日常监测计划 + 环境适应指导 + 随访安排，帮助患者在院外执行管理方案。</div>
+      </div>
+      <div class="stat-card" data-anim>
+        <div class="stat-label">Part 06</div>
+        <div class="stat-nb" style="font-size:1.8vw; font-family:var(--serif-zh); font-weight:600">短信浓缩版</div>
+        <div class="stat-note">数千字完整版压缩为核心要点，短信推送到患者手机，确保关键信息触达。</div>
+      </div>
+    </div>
+  </div>
+  <div class="foot"><div>处方结构 · 六部分结构化处方：体重 + 饮食 + 运动 + 危险信号 + 自我管理 + 短信版</div><div>Prescription Structure</div></div>
+</section>
+
+<!-- 27 · 审核与迭代 -->
+<section class="slide dark">
+  <div class="chrome"><div>Review · 审核与迭代</div><div>27 / 29</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Review · 审核与迭代</div>
+    <h2 class="h-xl" data-anim>2.5 审核与迭代机制</h2>
+    <div style="margin-top:4vh; display:flex; flex-direction:column; gap:2vh">
+      <div class="rowline" data-anim>
+        <div class="k">01</div>
+        <div class="v">AI生成初稿后，医生审核最终内容</div>
+        <div class="m">生成</div>
+      </div>
+      <div class="rowline" data-anim>
+        <div class="k">02</div>
+        <div class="v">驳回某条建议必须填写原因，驳回记录回流至模型微调数据库</div>
+        <div class="m">反馈</div>
+      </div>
+      <div class="rowline" data-anim>
+        <div class="k">03</div>
+        <div class="v">处方不以单次主诉为边界，一份处方覆盖所有风险因素</div>
+        <div class="m">全量</div>
+      </div>
+      <div class="rowline" data-anim>
+        <div class="k">04</div>
+        <div class="v">医生审核通过后点击"授权并打印"，系统自动签名并输出</div>
+        <div class="m">输出</div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:3vh" data-anim>每一次驳回都在优化模型未来的推荐质量。部署越久、使用越多，处方越适配本地人群。</div>
+  </div>
+  <div class="foot"><div>2.5 审核与迭代 · 生成 → 审核 → 驳回反馈 → 模型微调</div><div>Review & Iteration</div></div>
+</section>
+
+<!-- 28 · 幕封 · 八 -->
+<section class="slide hero dark">
+  <div class="chrome"><div>第八章 · 诊后</div><div>28 / 29</div></div>
+  <div class="frame" style="display:grid; gap:5vh; align-content:center; min-height:80vh">
+    <div class="kicker" data-anim>Act VIII</div>
+    <h1 class="h-hero" style="font-size:10vw" data-anim>诊后</h1>
+    <h2 class="h-sub" data-anim>转诊管理</h2>
+    <p class="lead" style="max-width:58vw" data-anim>提前给出建议并追踪结果，而非"一转了之"</p>
+  </div>
+  <div class="foot"><div>第八章 · 诊后 -- 转诊管理</div><div>-- · --</div></div>
+</section>
+
+<!-- 29 · 转诊闭环 -->
+<section class="slide light">
+  <div class="chrome"><div>Referral · 转诊闭环</div><div>29 / 29</div></div>
+  <div class="frame" style="padding-top:5vh">
+    <div class="kicker" data-anim>Referral · 转诊闭环</div>
+    <h2 class="h-xl" data-anim>建议 → 决策 → 追踪 → 反馈</h2>
+    <div class="pipeline-section" style="margin-top:4vh">
+      <div class="pipeline-label" data-anim>Referral Pipeline · 转诊管理流程</div>
+      <div class="pipeline" data-cols="4">
+        <div class="step" data-anim>
+          <div class="step-nb">01</div>
+          <div class="step-title">建议</div>
+          <div class="step-desc">AI基于转诊风险预测自动生成转诊建议，明确转诊科室和紧急程度</div>
+        </div>
+        <div class="step" data-anim>
+          <div class="step-nb">02</div>
+          <div class="step-title">决策</div>
+          <div class="step-desc">医生接受或拒绝建议。拒绝须填写理由，记录完整决策轨迹</div>
+        </div>
+        <div class="step" data-anim>
+          <div class="step-nb">03</div>
+          <div class="step-title">追踪</div>
+          <div class="step-desc">通过数据中台监测患者就诊记录变化，确认转诊执行情况</div>
+        </div>
+        <div class="step" data-anim>
+          <div class="step-nb">04</div>
+          <div class="step-title">反馈</div>
+          <div class="step-desc">拒绝理由回传至模型微调数据库，持续优化转诊推荐质量</div>
+        </div>
+      </div>
+    </div>
+    <div class="callout" style="margin-top:3vh" data-anim>追踪不依赖人工反馈，不增加医生操作负担。每一次拒绝决策都在优化模型未来的推荐质量。</div>
+  </div>
+  <div class="foot"><div>转诊闭环 · 建议 → 决策 → 追踪 → 反馈 · 数据驱动的转诊管理闭环</div><div>Referral Loop</div></div>
+</section><!-- Slide 30: 幕封 · 九 -->
+<section class="slide hero light">
+  <div class="chrome" data-anim="fade"></div>
+  <div class="frame center fill">
+    <div class="kicker" data-anim="fade-up">Act IX</div>
+    <h1 class="h-hero" style="font-size:10vw;" data-anim="fade-up">诊后</h1>
+    <h2 class="h-sub" data-anim="fade-up">诊后审核与RPA跨系统同步</h2>
+    <p class="lead" data-anim="fade-up">医生只在一个系统操作，数据在所有系统一致</p>
+  </div>
+  <div class="foot" data-anim="fade"></div>
+</section>
+
+<!-- Slide 31: RPA核心设计 -->
+<section class="slide dark">
+  <div class="chrome" data-anim="fade"></div>
+  <div class="frame">
+    <div class="kicker" data-anim="fade-up">RPA · 跨系统同步</div>
+    <h1 class="h-xl" data-anim="fade-up">医生只在一个系统操作</h1>
+    <div class="grid-3" style="margin-top:2vw;">
+      <div class="pillar" data-anim="fade-up">
+        <h3 class="h-md" style="margin-bottom:1vw;">诊后审核</h3>
+        <p class="body-zh">随访记录汇总至统一模块，点击一次按钮即完成</p>
+      </div>
+      <div class="pillar" data-anim="fade-up">
+        <h3 class="h-md" style="margin-bottom:1vw;">RPA跨系统同步</h3>
+        <p class="body-zh">Electron桌面端内置RPA，模拟人工操作实现跨系统数据同步</p>
+      </div>
+      <div class="pillar" data-anim="fade-up">
+        <h3 class="h-md" style="margin-bottom:1vw;">核心设计逻辑</h3>
+        <p class="body-zh">RPA让跨系统同步对医生"透明"——工作量不增反降</p>
+      </div>
+    </div>
+    <div class="callout" data-anim="fade-up" style="margin-top:2.5vw;">
+      <p class="callout-src">保障数据的真实性（一条记录、一个来源、一次录入）和医生的依从性（不增加负担，医生才愿意持续使用）。</p>
+    </div>
+  </div>
+  <div class="foot" data-anim="fade"></div>
+</section>
+
+<!-- Slide 32: 幕封 · 十 -->
+<section class="slide hero dark">
+  <div class="chrome" data-anim="fade"></div>
+  <div class="frame center fill">
+    <div class="kicker" data-anim="fade-up">Act X</div>
+    <h1 class="h-hero" style="font-size:10vw;" data-anim="fade-up">院外</h1>
+    <h2 class="h-sub" data-anim="fade-up">患者端服务延续</h2>
+    <p class="lead" data-anim="fade-up">让患者从"被动接受管理"变为"主动参与管理"</p>
+  </div>
+  <div class="foot" data-anim="fade"></div>
+</section>
+
+<!-- Slide 33: 患者端三项功能 -->
+<section class="slide light">
+  <div class="chrome" data-anim="fade"></div>
+  <div class="frame">
+    <div class="kicker" data-anim="fade-up">Patient App · 患者端</div>
+    <h1 class="h-xl" data-anim="fade-up">三项核心功能</h1>
+    <div class="grid-3" style="margin-top:2vw;">
+      <div class="stat-card" data-anim="fade-up">
+        <div class="stat-label">功能一</div>
+        <div class="stat-nb" style="font-size:2.5vw;">风险预测报告与健康处方</div>
+        <div class="stat-note">随时查看风险等级、指标趋势、完整健康处方</div>
+      </div>
+      <div class="stat-card" data-anim="fade-up">
+        <div class="stat-label">功能二</div>
+        <div class="stat-nb" style="font-size:2.5vw;">用药购买</div>
+        <div class="stat-note">基于处方的在线医保结算购药，免去定期跑医院</div>
+      </div>
+      <div class="stat-card" data-anim="fade-up">
+        <div class="stat-label">功能三</div>
+        <div class="stat-nb" style="font-size:2.5vw;">预约挂号</div>
+        <div class="stat-note">AI预测门诊峰谷，推荐合理就诊时间窗口</div>
+      </div>
+    </div>
+    <div class="callout" data-anim="fade-up" style="margin-top:2.5vw;">
+      <p class="callout-src">AI通过患者端直接触达患者，让患者感受到"这个系统在帮我管健康"——这是提升患者粘性和管理依从性的关键。</p>
+    </div>
+  </div>
+  <div class="foot" data-anim="fade"></div>
+</section>
+
+<!-- Slide 34: 幕封 · 十一 -->
+<section class="slide hero light">
+  <div class="chrome" data-anim="fade"></div>
+  <div class="frame center fill">
+    <div class="kicker" data-anim="fade-up">Act XI</div>
+    <h1 class="h-hero" style="font-size:8vw;" data-anim="fade-up">统计分析</h1>
+    <h2 class="h-sub" data-anim="fade-up">与管理驾驶舱</h2>
+    <p class="lead" data-anim="fade-up">所有管理数据均可下钻到最小粒度——从区域到个人，反映宏观趋势，逐级验证</p>
+  </div>
+  <div class="foot" data-anim="fade"></div>
+</section>
+
+<!-- Slide 35: 统计与管理驾驶舱 -->
+<section class="slide dark">
+  <div class="chrome" data-anim="fade"></div>
+  <div class="frame">
+    <div class="kicker" data-anim="fade-up">Dashboard · 管理驾驶舱</div>
+    <h1 class="h-xl" data-anim="fade-up">四级下钻 · 口径统一</h1>
+    <div class="grid-2-6-6 split" style="margin-top:2vw;">
+      <div data-anim="fade-up">
+        <h3 class="h-md" style="margin-bottom:1vw;">工作量统计</h3>
+        <p class="body-zh" style="line-height:1.8;">按诊前、诊中、诊后三个维度展示医生服务量，支持柱状图逐级下钻——<strong>区域</strong> → <strong>机构</strong> → <strong>医生</strong> → <strong>具体患者名单</strong></p>
+      </div>
+      <div data-anim="fade-up">
+        <h3 class="h-md" style="margin-bottom:1vw;">指标统计</h3>
+        <p class="body-zh" style="line-height:1.8;">入径率等管理指标，支持按时间段筛选，点击指标数字可下钻至名单</p>
+      </div>
+    </div>
+    <div class="callout" data-anim="fade-up" style="margin-top:2.5vw;">
+      <p class="callout-src">工作量统计、指标统计、管理驾驶舱共用底层数据，保证统计口径一致。</p>
+    </div>
+  </div>
+  <div class="foot" data-anim="fade"></div>
+</section>
+
+<!-- Slide 36: 幕封 · 十二 -->
+<section class="slide hero dark">
+  <div class="chrome" data-anim="fade"></div>
+  <div class="frame center fill">
+    <div class="kicker" data-anim="fade-up">Act XII</div>
+    <h1 class="h-hero" style="font-size:6.5vw;" data-anim="fade-up">医保费用预测</h1>
+    <h2 class="h-sub" data-anim="fade-up">与资源调配</h2>
+    <p class="lead" data-anim="fade-up">基于门诊量、挂号记录、疾病谱、患者年龄结构和历史医疗支出，形成预测能力</p>
+  </div>
+  <div class="foot" data-anim="fade"></div>
+</section>
+
+<!-- Slide 37: 医保费用预测详情 -->
+<section class="slide light">
+  <div class="chrome" data-anim="fade"></div>
+  <div class="frame">
+    <div class="kicker" data-anim="fade-up">Planning · 规划方向</div>
+    <h1 class="h-xl" data-anim="fade-up">门诊峰谷预测 · 医保费用预测</h1>
+    <div class="grid-2-6-6 split" style="margin-top:2vw;">
+      <div data-anim="fade-up">
+        <h3 class="h-md" style="margin-bottom:1vw;">门诊峰谷预测</h3>
+        <p class="body-zh" style="line-height:1.8;">按小时或分时段统计预测到诊人数，支持未来一周至一个月的预估，辅助排班和随访安排</p>
+      </div>
+      <div data-anim="fade-up">
+        <h3 class="h-md" style="margin-bottom:1vw;">医保费用预测</h3>
+        <p class="body-zh" style="line-height:1.8;">结合就诊人数、疾病结构和历史费用数据，预估医保支出趋势</p>
+      </div>
+    </div>
+    <div class="callout" data-anim="fade-up" style="margin-top:2.5vw;">
+      <p class="callout-src">支撑医保基金精细化管理和资源调度</p>
+    </div>
+  </div>
+  <div class="foot" data-anim="fade"></div>
+</section>
+
+<!-- Slide 38: 幕封 · 十三 -->
+<section class="slide hero light">
+  <div class="chrome" data-anim="fade"></div>
+  <div class="frame center fill">
+    <div class="kicker" data-anim="fade-up">Act XIII</div>
+    <h1 class="h-hero" style="font-size:7vw;" data-anim="fade-up">差异化总结</h1>
+    <p class="lead" data-anim="fade-up">传统HIS的核心逻辑是记录。AI慢病管理体系的核心逻辑是预判与引导。</p>
+  </div>
+  <div class="foot" data-anim="fade"></div>
+</section>
+
+<!-- Slide 39: 五大差异(上) -->
+<section class="slide dark">
+  <div class="chrome" data-anim="fade"></div>
+  <div class="frame">
+    <div class="kicker" data-anim="fade-up">Differentiation · 核心差异</div>
+    <h1 class="h-xl" data-anim="fade-up">从记录到预判的根本转变</h1>
+    <div class="grid-3" style="margin-top:2vw;">
+      <div class="rowline" data-anim="fade-up">
+        <span class="tag" style="margin-bottom:0.8vw;display:inline-block;">差异一</span>
+        <h3 class="h-md" style="margin-bottom:0.5vw;">从"管一件事"到"管一个人"</h3>
+        <p class="body-zh" style="line-height:1.7;">传统HIS以科室为边界，本系统以患者为中心对其全部慢病统一管理</p>
+      </div>
+      <div class="rowline" data-anim="fade-up">
+        <span class="tag" style="margin-bottom:0.8vw;display:inline-block;">差异二</span>
+        <h3 class="h-md" style="margin-bottom:0.5vw;">从"事后记录"到"事前干预"</h3>
+        <p class="body-zh" style="line-height:1.7;">AI预测模型在指标恶化之前即识别出风险上升趋势</p>
+      </div>
+      <div class="rowline" data-anim="fade-up">
+        <span class="tag" style="margin-bottom:0.8vw;display:inline-block;">差异三</span>
+        <h3 class="h-md" style="margin-bottom:0.5vw;">从"被动工具"到"路径引导"</h3>
+        <p class="body-zh" style="line-height:1.7;">每个环节给出结构化建议并提示下一步，弥合不同年资医生的能力差异</p>
+      </div>
+    </div>
+  </div>
+  <div class="foot" data-anim="fade"></div>
+</section>
+
+<!-- Slide 40: 五大差异(下) + 系统定位 -->
+<section class="slide light">
+  <div class="chrome" data-anim="fade"></div>
+  <div class="frame">
+    <div class="kicker" data-anim="fade-up">Differentiation · 核心差异</div>
+    <h1 class="h-xl" data-anim="fade-up">从封闭到开放的体系升级</h1>
+    <div class="grid-2-6-6 split" style="margin-top:2vw;">
+      <div class="rowline" data-anim="fade-up">
+        <span class="tag" style="margin-bottom:0.8vw;display:inline-block;">差异四</span>
+        <h3 class="h-md" style="margin-bottom:0.5vw;">从"院内断点"到"全域闭环"</h3>
+        <p class="body-zh" style="line-height:1.7;">RPA打通跨系统数据闭环，患者端将AI能力直接触达患者</p>
+      </div>
+      <div class="rowline" data-anim="fade-up">
+        <span class="tag" style="margin-bottom:0.8vw;display:inline-block;">差异五</span>
+        <h3 class="h-md" style="margin-bottom:0.5vw;">从"静态模板"到"越用越准"</h3>
+        <p class="body-zh" style="line-height:1.7;">每一次医生驳回和修改都回流至训练数据库驱动迭代</p>
+      </div>
+    </div>
+    <div class="callout" data-anim="fade-up" style="margin-top:2.5vw;">
+      <p class="callout-src">本系统既可作为现有HIS的补充，也具备成为新一代智能HIS的基础。目前在杭州富阳区试点，以高血压和糖尿病为切入点，正筹备向全域推广。</p>
+    </div>
+  </div>
+  <div class="foot" data-anim="fade"></div>
+</section>
+
+</div>
+
+<div id="nav"></div>
+
+<script>
+/* =============== WebGL 双背景 ===============
+   深色页：Holographic Dispersion（全息色散 · 钛金暗流）—— 彩虹微扰、鼠标径向涟漪
+   浅色页：Spiral Vortex（旋转涡流 · 银色珍珠）—— domain-warp 流动、无中心
+   修改风格请参考 references/webgl-backgrounds.md
+*/
+const VS = `attribute vec2 position;void main(){gl_Position=vec4(position,0.0,1.0);}`;
+
+const FS_DARK = `precision highp float;
+uniform vec2 u_resolution;uniform float u_time;uniform vec2 u_mouse;
+vec3 palette(float t,vec3 a,vec3 b,vec3 c,vec3 d){return a+b*cos(6.28318*(c*t+d));}
+void main(){
+  vec2 uv=gl_FragCoord.xy/u_resolution.xy;
+  vec2 p=uv*2.0-1.0;p.x*=u_resolution.x/u_resolution.y;
+  vec2 m=u_mouse*2.0-1.0;m.x*=u_resolution.x/u_resolution.y;
+  float md=length(p-m);
+  float mr=sin(md*15.0-u_time*4.0)*exp(-md*3.0);p+=mr*0.08;
+  vec2 p0=p;
+  for(float i=1.0;i<4.0;i++){
+    p.x+=0.1/i*sin(i*3.0*p.y+u_time*0.4)+0.05;
+    p.y+=0.1/i*cos(i*2.0*p.x+u_time*0.3)-0.05;
+  }
+  float r=length(p);float ang=atan(p.y,p.x);
+  vec3 a=vec3(0.12,0.12,0.13);
+  vec3 b=vec3(0.03,0.04,0.05);
+  vec3 c=vec3(1.0,1.0,1.0);
+  vec3 d=vec3(0.1,0.2,0.4);
+  vec3 col=palette(r*1.5+p0.x*0.5+u_time*0.1,a,b,c,d);
+  float disp=sin(r*25.0-u_time*1.5+ang*2.0)*0.5+0.5;
+  col+=vec3(disp*0.015,disp*0.01,disp*0.02);
+  float hi=pow(sin(p.x*4.0+p.y*3.0+u_time)*0.5+0.5,8.0);
+  col+=hi*0.08;
+  vec3 base=vec3(0.05,0.05,0.06);
+  col=mix(base,col,0.85);
+  gl_FragColor=vec4(col,1.0);
+}`;
+
+const FS_LIGHT = `precision highp float;
+uniform vec2 u_resolution;uniform float u_time;uniform vec2 u_mouse;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){
+  vec2 i=floor(p),f=fract(p);
+  float a=hash(i),b=hash(i+vec2(1,0));
+  float c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));
+  vec2 u=f*f*(3.0-2.0*f);
+  return mix(a,b,u.x)+(c-a)*u.y*(1.0-u.x)+(d-b)*u.x*u.y;
+}
+float fbm(vec2 p){
+  float v=0.0,a=0.5;
+  mat2 m=mat2(0.80,0.60,-0.60,0.80);
+  for(int i=0;i<5;i++){v+=a*noise(p);p=m*p*2.02;a*=0.5;}
+  return v;
+}
+void main(){
+  vec2 uv=gl_FragCoord.xy/u_resolution.xy;
+  vec2 p=uv;p.x*=u_resolution.x/u_resolution.y;
+  vec2 m=u_mouse;m.x*=u_resolution.x/u_resolution.y;
+  vec2 md=p-m;float dl=length(md);
+  p+=normalize(md+vec2(0.0001))*exp(-dl*5.0)*0.03;
+  vec2 q=vec2(fbm(p*1.8+u_time*0.07),fbm(p*1.8+vec2(5.2,1.3)+u_time*0.06));
+  vec2 r=vec2(fbm(p*2.0+q*1.3+vec2(1.7,9.2)+u_time*0.05),
+              fbm(p*2.0+q*1.3+vec2(8.3,2.8)+u_time*0.04));
+  float f=fbm(p*2.2+r*1.5);
+  vec3 silverDark=vec3(0.86,0.85,0.84);
+  vec3 paper=vec3(0.955,0.945,0.925);
+  vec3 col=mix(silverDark,paper,f);
+  float ph=r.x*2.2+u_time*0.35;
+  col+=vec3(0.78,0.62,0.92)*sin(ph)*0.055;
+  col+=vec3(0.55,0.72,0.95)*sin(ph*0.8+2.0)*0.05;
+  float hl=smoothstep(0.48,0.92,f);
+  col+=hl*0.06;
+  gl_FragColor=vec4(col,1.0);
+}`;
+
+const mouse={x:0.5,y:0.5};
+addEventListener('mousemove',e=>{mouse.x=e.clientX/innerWidth;mouse.y=e.clientY/innerHeight});
+
+function bootGL(canvasId, fsSrc){
+  const canvas=document.getElementById(canvasId);
+  const gl=canvas.getContext('webgl',{alpha:false,antialias:true});
+  if(!gl) return ()=>false;
+  const mk=(t,s)=>{const sh=gl.createShader(t);gl.shaderSource(sh,s);gl.compileShader(sh);return sh};
+  const prog=gl.createProgram();
+  gl.attachShader(prog,mk(gl.VERTEX_SHADER,VS));
+  gl.attachShader(prog,mk(gl.FRAGMENT_SHADER,fsSrc));
+  gl.linkProgram(prog);gl.useProgram(prog);
+  const buf=gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+  const pos=gl.getAttribLocation(prog,'position');
+  gl.enableVertexAttribArray(pos);gl.vertexAttribPointer(pos,2,gl.FLOAT,false,0,0);
+  const lRes=gl.getUniformLocation(prog,'u_resolution');
+  const lT=gl.getUniformLocation(prog,'u_time');
+  const lM=gl.getUniformLocation(prog,'u_mouse');
+  const resize=()=>{
+    const d=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=innerWidth*d;canvas.height=innerHeight*d;
+    gl.viewport(0,0,canvas.width,canvas.height);
+  };
+  addEventListener('resize',resize);resize();
+  return (tSec)=>{
+    gl.uniform2f(lRes,canvas.width,canvas.height);
+    gl.uniform1f(lT,tSec);
+    gl.uniform2f(lM,mouse.x,1-mouse.y);
+    gl.drawArrays(gl.TRIANGLES,0,6);
+    return true;
+  };
+}
+let drawDark=null, drawLight=null, glRAF=0, glT0=Date.now();
+function startGL(){
+  if(window.__lowPowerMode || glRAF) return;
+  if(!drawDark) drawDark=bootGL('bg-dark',FS_DARK);
+  if(!drawLight) drawLight=bootGL('bg-light',FS_LIGHT);
+  glT0=Date.now();
+  function loop(){
+    if(window.__lowPowerMode){glRAF=0;return;}
+    const t=(Date.now()-glT0)/1000;
+    drawDark(t);drawLight(t);
+    glRAF=requestAnimationFrame(loop);
+  }
+  glRAF=requestAnimationFrame(loop);
+}
+function stopGL(){
+  if(glRAF) cancelAnimationFrame(glRAF);
+  glRAF=0;
+}
+startGL();
+addEventListener('ppt-low-power-change', e=>{e.detail.on ? stopGL() : startGL();});
+
+// =============== 导航（翻页 / 圆点 / 键盘 / 滚轮 / 触屏） ===============
+const deck=document.getElementById('deck');
+const slides=deck.querySelectorAll('.slide');
+const nav=document.getElementById('nav');
+let idx=0,total=slides.length,lock=false;
+
+// 关键：矫正 deck 宽度为 total * 100vw，否则翻页会错位
+deck.style.width=(total*100)+'vw';
+
+slides.forEach((s,i)=>{
+  const b=document.createElement('button');
+  b.className='dot';b.dataset.i=i;b.setAttribute('aria-label','Page '+(i+1));
+  b.onclick=()=>go(i);
+  nav.appendChild(b);
+});
+
+function go(n){
+  if(lock)return;
+  idx=Math.max(0,Math.min(total-1,n));
+  window.__currentSlideIndex = idx;
+  deck.style.transform=`translateX(${-idx*100}vw)`;
+  nav.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+  /* 主题切换：优先读 data-theme，其次从 class（light/dark）推断 */
+  const el=slides[idx];
+  const th=el.dataset.theme || (el.classList.contains('light')?'light':(el.classList.contains('dark')?'dark':'dark'));
+  document.body.classList.toggle('light-bg',th==='light');
+  /* 动效：翻页过渡中段触发当前页的入场动画（由 motion-boot 注册） */
+  if(window.__playSlide) setTimeout(()=>window.__playSlide(idx), 50);
+  lock=true;setTimeout(()=>lock=false,200);
+}
+
+/* =============== ESC 索引视图 =============== */
+let overviewOn=false;
+const ov=document.createElement('div');
+ov.id='overview';
+ov.style.cssText='position:fixed;inset:0;z-index:100;background:rgba(var(--ink-rgb),.92);backdrop-filter:blur(12px);display:none;overflow-y:auto;padding:4vh 4vw';
+document.body.appendChild(ov);
+
+function buildOverview(){
+  ov.innerHTML='';
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(4,1fr);gap:2vh 1.6vw;max-width:90vw;margin:0 auto';
+  slides.forEach((s,i)=>{
+    const card=document.createElement('div');
+    card.style.cssText='cursor:pointer;border-radius:6px;overflow:hidden;border:2px solid '+(i===idx?'rgba(var(--paper-rgb),.8)':'rgba(var(--paper-rgb),.15)')+';transition:border-color .2s';
+    card.onmouseenter=()=>card.style.borderColor='rgba(var(--paper-rgb),.6)';
+    card.onmouseleave=()=>card.style.borderColor=i===idx?'rgba(var(--paper-rgb),.8)':'rgba(var(--paper-rgb),.15)';
+    const wrap=document.createElement('div');
+    wrap.style.cssText='width:100%;aspect-ratio:16/9;overflow:hidden;position:relative;pointer-events:none;background:'+(s.classList.contains('light')?'var(--paper)':'var(--ink)');
+    const clone=s.cloneNode(true);
+    clone.style.cssText='width:100vw;height:100vh;transform:scale('+(1/4.5)+');transform-origin:top left;position:absolute;top:0;left:0;pointer-events:none';
+    wrap.appendChild(clone);
+    const label=document.createElement('div');
+    label.style.cssText='padding:6px 10px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--paper);opacity:.7';
+    label.textContent=(i+1)+' / '+total;
+    card.appendChild(wrap);
+    card.appendChild(label);
+    card.onclick=()=>{toggleOverview();go(i)};
+    grid.appendChild(card);
+  });
+  ov.appendChild(grid);
+}
+
+function toggleOverview(){
+  overviewOn=!overviewOn;
+  if(overviewOn){buildOverview();ov.style.display='block';}
+  else{ov.style.display='none';}
+}
+
+addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();toggleOverview();return;}
+  if(e.key && e.key.toLowerCase()==='b' && !e.metaKey && !e.ctrlKey && !e.altKey){
+    e.preventDefault();
+    window.__setLowPowerMode(!window.__lowPowerMode);
+    return;
+  }
+  if(overviewOn)return;
+  if(e.key==='ArrowRight'||e.key==='PageDown'||e.key===' '||e.key==='ArrowDown'){
+    if(window.__pipeAdvance && window.__pipeAdvance()) return;
+    go(idx+1);
+    return;
+  }
+  if(e.key==='ArrowLeft'||e.key==='PageUp'||e.key==='ArrowUp')go(idx-1);
+  if(e.key==='Home')go(0);
+  if(e.key==='End')go(total-1);
+});
+
+let wheelTO=null,wheelAcc=0;
+addEventListener('wheel',e=>{
+  wheelAcc+=e.deltaY+e.deltaX;
+  if(Math.abs(wheelAcc)>50){
+    if(wheelAcc>0 && window.__pipeAdvance && window.__pipeAdvance()){
+      wheelAcc=0;
+    }else{
+      go(idx+(wheelAcc>0?1:-1));wheelAcc=0;
+    }
+  }
+  clearTimeout(wheelTO);wheelTO=setTimeout(()=>wheelAcc=0,150);
+},{passive:true});
+
+let tx=0,ty=0;
+addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+addEventListener('touchend',e=>{
+  const dx=(e.changedTouches[0].clientX-tx);
+  const dy=(e.changedTouches[0].clientY-ty);
+  if(Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)){
+    if(dx<0 && window.__pipeAdvance && window.__pipeAdvance()) return;
+    go(idx+(dx<0?1:-1));
+  }
+},{passive:true});
+
+go(0);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"\\[",right:"\\]",display:true},{left:"\\(",right:"\\)",display:false}]})});</script>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<script>lucide.createIcons();</script>
+
+<!-- ============ Motion One 动效引擎（本地优先,CDN 兜底） ============
+     加载策略:先 ./assets/motion.min.js(本地,离线可用),失败 fallback 到 jsDelivr CDN
+     加载完成后挂 window.__playSlide / window.__pipeAdvance,
+     导航脚本会在翻页中段调用 __playSlide(idx),键盘/滚轮/触屏会在翻页前调用 __pipeAdvance()
+     双双失败时会兜底把所有 [data-anim] 设为可见,不让动效破坏阅读
+-->
+<script type="module">
+let motion;
+try {
+  motion = await import('./assets/motion.min.js');
+} catch(e1) {
+  try {
+    motion = await import('https://cdn.jsdelivr.net/npm/motion@11.11.17/+esm');
+  } catch(e2) {
+    console.warn('[motion] local + CDN both failed, disabling animations', e1, e2);
+    document.querySelectorAll('[data-anim]').forEach(el=>{el.style.opacity='1';el.style.transform='none'});
+    document.querySelectorAll('[data-animate="pipeline"] [data-anim]').forEach(el=>el.style.opacity='1');
+  }
+}
+
+if(motion){
+  const { animate, stagger } = motion;
+  document.body.classList.add('motion-ready');
+  const EASE = [.22, 1, .36, 1];
+  const slides = [...document.querySelectorAll('.slide')];
+  let pipeStep = -1;
+  let lastIdx = -1;
+
+  function resetAnims(slide){
+    slide.querySelectorAll('[data-anim]').forEach(el=>{
+      el.style.opacity='';
+      el.style.transform='';
+    });
+  }
+
+  function revealStatic(slide){
+    resetAnims(slide);
+    document.getAnimations?.().forEach(a=>a.cancel());
+    slide.querySelectorAll('[data-anim]').forEach(el=>{
+      el.style.opacity='1';
+      el.style.transform='none';
+    });
+  }
+
+  function playSlide(i){
+    const slide = slides[i];
+    if(!slide) return;
+    lastIdx = i;
+    const recipe = slide.dataset.animate || (slide.classList.contains('hero') ? 'hero' : 'cascade');
+
+    if(window.__lowPowerMode){
+      revealStatic(slide);
+      return;
+    }
+
+    if(recipe === 'pipeline'){
+      pipeStep = -1;
+      slide.querySelectorAll('[data-anim]').forEach(el=>{
+        el.style.opacity='0.15';
+        el.style.transform='none';
+      });
+      return;
+    }
+
+    resetAnims(slide);
+    const all = [...slide.querySelectorAll('[data-anim]')];
+    if(!all.length) return;
+
+    if(recipe === 'directional'){
+      const lefts  = all.filter(el=>el.dataset.anim==='left');
+      const divs   = all.filter(el=>el.dataset.anim==='divider');
+      const rights = all.filter(el=>el.dataset.anim==='right');
+      const others = all.filter(el=>!['left','right','divider'].includes(el.dataset.anim));
+      if(others.length) animate(others, {opacity:[0,1], y:[12,0]}, {duration:.6, delay:stagger(.1, {start:.15}), easing:EASE});
+      if(lefts.length)  animate(lefts,  {opacity:[0,1], x:[-24,0]}, {duration:.8, delay:.35, easing:EASE});
+      if(divs.length)   animate(divs,   {opacity:[0,.25]},          {duration:.5, delay:.9});
+      if(rights.length) animate(rights, {opacity:[0,1], x:[24,0]},  {duration:.8, delay:1.0, easing:EASE});
+      return;
+    }
+
+    if(recipe === 'quote'){
+      const lines = all.filter(el=>el.dataset.anim==='line');
+      const others = all.filter(el=>el.dataset.anim!=='line');
+      if(others.length) animate(others, {opacity:[0,1], y:[8,0]},    {duration:.6, delay:stagger(.12, {start:.2}), easing:EASE});
+      if(lines.length)  animate(lines,  {opacity:[.35,1], y:[10,0]}, {duration:.8, delay:stagger(.55, {start:.5}), easing:EASE});
+      return;
+    }
+
+    if(recipe === 'hero'){
+      animate(all, {opacity:[0,1], y:[14,0]}, {duration:.9, delay:stagger(.16, {start:.2}), easing:EASE});
+      return;
+    }
+
+    // default: cascade
+    animate(all, {opacity:[0,1], y:[16,0]}, {duration:.75, delay:stagger(.1, {start:.15}), easing:EASE});
+  }
+
+  function pipeAdvance(){
+    if(window.__lowPowerMode) return false;
+    const slide = slides[lastIdx];
+    if(!slide || slide.dataset.animate !== 'pipeline') return false;
+    const steps  = [...slide.querySelectorAll('[data-anim="step"]')];
+    const arrows = [...slide.querySelectorAll('[data-anim="arrow"]')];
+    if(pipeStep >= steps.length - 1) return false;
+    pipeStep++;
+    animate(steps[pipeStep], {opacity:[0.15,1], y:[8,0]}, {duration:.5, easing:EASE});
+    if(pipeStep > 0 && arrows[pipeStep-1]){
+      animate(arrows[pipeStep-1], {opacity:[0.15,.7]}, {duration:.3, delay:.15});
+    }
+    return true;
+  }
+
+  window.__playSlide = playSlide;
+  window.__pipeAdvance = pipeAdvance;
+
+  // 首屏:go(0) 已跑过(同步),没来得及触发动效 → 这里补一下
+  playSlide(0);
+}
+</script>
+</body>
+</html>
