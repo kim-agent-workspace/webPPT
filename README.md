@@ -72,3 +72,26 @@ bash webppt-ctl.sh status
 | 严重问题与注意事项 | 5 项严重问题、6 项需注意、5 项亮点 |
 
 **子 PPT**：`/dataAudit/AI-ppt/`（41 页）— AI 慢病管理体系说明，涵盖诊前/诊中/诊后/院外全流程的 AI 驱动慢病管理方案。
+
+---
+
+### discreteDataGxyPreprocess 离散时间生存分析 · 项目阶段性汇报
+
+- **路径**：`/discreteDataGxyPreprocess/`
+- **页数**：12 页
+- **主题**：离散时间生存分析数据工程 — 从原始医疗记录到 Transformer 输入张量的完整预处理链路
+
+以高血压（gxy）为目标疾病的数据工程阶段性汇报，核心内容包括：
+
+| 章节 | 内容 |
+|------|------|
+| 总览 · 项目进度 | 5 个核心数据工程模块全部完成，labels + features 审计、事件定义与特征清洗、区间构造、分层拆分、序列化 |
+| 指标 · 核心数据 | 可建模 Subjects 数、风险区间、Subject 事件率、Transformer 输入维度等关键指标 |
+| 流程 · 数据流水线 | 00–05 脚本完整数据工程链路，输出 .npz 序列张量 |
+| 设计 · 审查结论 | 关键设计决策回顾与审查 |
+| 审计 · 关键发现 | 六项关键发现（含数据规模、时间质量与标签分布） |
+| 清洗 · 事件定义 | 高血压首次事件定义，LOCF + median 填补，缺失指示器 |
+| 区间构造 / 拆分 / 序列化 | change-point 离散时间区间，排除 prevalent cases，subject-level 分层拆分 + backward alignment |
+| 规格 · 模型输入 | 张量规格说明，进入建模阶段 |
+
+**技术亮点**：离散时间生存分析框架 → 高血压首次事件定义 → change-point 区间构造 → subject-level 分层拆分 → backward alignment 定长序列 → Transformer 输入张量。
