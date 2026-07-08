@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>webPPT · 演示文稿索引</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=Noto+Sans+SC:wght@200;300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #fafaf8;
+    --ink: #0a0a0a;
+    --grey-1: #f0f0ee;
+    --grey-2: #d4d4d2;
+    --grey-3: #737373;
+    --accent: #002FA7;
+    --accent-bright: #5B7BFF;
+    --sans: "Inter", "Helvetica Neue", "Helvetica", "Arial", system-ui, sans-serif;
+    --sans-zh: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans), var(--sans-zh);
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 800px;
+    padding: 48px 32px;
+  }
+
+  .header {
+    margin-bottom: 56px;
+  }
+
+  .kicker {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    color: var(--grey-3);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .title {
+    font-family: var(--sans), var(--sans-zh);
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 200;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+    color: var(--ink);
+  }
+
+  .title mark {
+    background: none;
+    color: var(--accent);
+  }
+
+  .desc {
+    margin-top: 12px;
+    font-size: 15px;
+    color: var(--grey-3);
+    line-height: 1.6;
+  }
+
+  .ppt-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ppt-card {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px 24px;
+    background: var(--grey-1);
+    border-radius: 8px;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.2s, transform 0.15s;
+    border: 1px solid transparent;
+  }
+
+  .ppt-card:hover {
+    background: #e8e8ff;
+    border-color: var(--accent);
+    transform: translateX(4px);
+  }
+
+  .ppt-card:active {
+    transform: translateX(4px) scale(0.995);
+  }
+
+  .ppt-num {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 52px;
+    padding: 4px 10px;
+    background: rgba(0,47,167,.08);
+    border-radius: 4px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .ppt-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .ppt-name {
+    font-family: var(--sans), var(--sans-zh);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+
+  .ppt-topic {
+    font-size: 13px;
+    color: var(--grey-3);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .ppt-arrow {
+    color: var(--grey-2);
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: color 0.2s, transform 0.2s;
+  }
+
+  .ppt-card:hover .ppt-arrow {
+    color: var(--accent);
+    transform: translateX(3px);
+  }
+
+  /* 子 PPT 缩进 */
+  .sub-ppt {
+    margin-left: 32px;
+    padding: 14px 20px;
+    background: transparent;
+    border: 1px dashed var(--grey-2);
+  }
+
+  .sub-ppt .ppt-num {
+    font-size: 12px;
+    padding: 3px 8px;
+    background: rgba(0,47,167,.05);
+    color: var(--grey-3);
+  }
+
+  .sub-ppt .ppt-name {
+    font-size: 15px;
+    font-weight: 400;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .tag-sub { background: var(--grey-2); color: var(--grey-3); }
+
+  .footer {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--grey-2);
+    font-size: 12px;
+    color: var(--grey-3);
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 600px) {
+    .container { padding: 32px 20px; }
+    .ppt-card { padding: 16px 18px; gap: 14px; }
+    .sub-ppt { margin-left: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header class="header">
+    <div class="kicker">WEBPPT · DEMONSTRATIONS</div>
+    <h1 class="title">演示文稿<mark>索引</mark></h1>
+    <p class="desc">基于 iCare 医防融合协同平台的慢病管理技术方案集合，涵盖系统汇报、数据审计与建模阶段性成果。</p>
+  </header>
+
+  <nav class="ppt-list">
+
+    <!-- iCare -->
+    <a class="ppt-card" href="/iCare/">
+      <span class="ppt-num">25p</span>
+      <div class="ppt-info">
+        <div class="ppt-name">iCare 医防融合协同平台系统汇报</div>
+        <div class="ppt-topic">慢病系统概述 · 全周期数据排列与存储 · RPA 多源 HIS 对接 · 慢病处方 · 预测算法 · 应用场景</div>
+      </div>
+      <span class="ppt-arrow">→</span>
+    </a>
+
+    <!-- dataAudit -->
+    <a class="ppt-card" href="/dataAudit/">
+      <span class="ppt-num">15p</span>
+      <div class="ppt-info">
+        <div class="ppt-name">原始数据审计报告</div>
+        <div class="ppt-topic">数据规模总览 · 6 种疾病事件定义对比 · 关键发现 · 极端稀疏特征矩阵 · 核心变量质量 · Labels ↔ Features 交叉覆盖</div>
+      </div>
+      <span class="ppt-arrow">→</span>
+    </a>
+
+    <!-- AI-ppt -->
+    <a class="ppt-card" href="/AI-ppt/">
+      <span class="ppt-num">41p</span>
+      <div class="ppt-info">
+        <div class="ppt-name">AI 慢病管理体系说明</div>
+        <div class="ppt-topic">诊前 / 诊中 / 诊后 / 院外全流程 — AI 驱动慢病管理方案</div>
+      </div>
+      <span class="ppt-arrow">→</span>
+    </a>
+
+    <!-- discreteDataGxyPreprocess -->
+    <a class="ppt-card" href="/discreteDataGxyPreprocess/">
+      <span class="ppt-num">12p</span>
+      <div class="ppt-info">
+        <div class="ppt-name">离散时间生存分析 · 项目阶段性汇报</div>
+        <div class="ppt-topic">数据工程 → 训练张量 · 事件定义与特征清洗 · change-point 区间构造 · 分层拆分 · 序列化 · 进入建模阶段</div>
+      </div>
+      <span class="ppt-arrow">→</span>
+    </a>
+
+  </nav>
+
+  <footer class="footer">
+    <span>webPPT · iCare轻量文档演示服务</span>
+    <span><a href="https://github.com/kim-agent-workspace/webPPT">GitHub</a></span>
+  </footer>
+
+</div>
+
+</body>
+</html>

@@ -18,7 +18,7 @@ bash webppt-ctl.sh restart
 bash webppt-ctl.sh status
 ```
 
-启动后通过 `http://<host>:55435/<ppt-name>/` 访问对应 PPT。
+启动后访问 `http://<host>:55435/` 查看 PPT 索引页面，或通过 `http://<host>:55435/<ppt-name>/` 直接访问对应 PPT。
 
 ### 控制信息
 
@@ -71,7 +71,7 @@ bash webppt-ctl.sh status
 | Labels ↔ Features 交叉覆盖 | 标签与特征之间的匹配度与覆盖分析 |
 | 严重问题与注意事项 | 5 项严重问题、6 项需注意、5 项亮点 |
 
-**子 PPT**：`/dataAudit/AI-ppt/`（41 页）— AI 慢病管理体系说明，涵盖诊前/诊中/诊后/院外全流程的 AI 驱动慢病管理方案。
+**子 PPT**：`/AI-ppt/`（41 页）— AI 慢病管理体系说明，涵盖诊前/诊中/诊后/院外全流程的 AI 驱动慢病管理方案。
 
 ---
 
